@@ -1,0 +1,13 @@
+RavenClient:
+  # Installs all available PHP error handlers
+  # Untested when set to true
+  install: false
+
+Injector:
+  SentryClient:
+    class: RavenClient
+
+Sentry:
+  dependencies:
+    client: '%$SentryClient'
+  tags:

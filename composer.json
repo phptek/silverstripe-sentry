@@ -1,0 +1,20 @@
+{
+	"name": "silverstripe/sentry",
+    "type": "silverstripe-module",
+	"description": "Flexible Sentry Client for SilverStripe.",
+    "keywords": ["log", "logging", "sentry", "raygun", "raven", "exception", "error"],
+	"author": [
+		{
+			"name": "Russell Michell",
+			"homepage": "http://theruss.com/"
+		}
+	],
+	"require": {
+		"php": ">=5.3.3",
+        "sentry/sentry": "1.6.2"
+    },
+	"config": {
+		"process-timeout": 900
+	},
+	"minimum-stability": "dev"
+}
