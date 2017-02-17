@@ -1,20 +1,25 @@
 {
-	"name": "silverstripe/sentry",
+    "name": "silverstripe/sentry",
     "type": "silverstripe-module",
-	"description": "Flexible Sentry Client for SilverStripe.",
-    "keywords": ["log", "logging", "sentry", "raygun", "raven", "exception", "error"],
-	"author": [
-		{
-			"name": "Russell Michell",
-			"homepage": "http://theruss.com/"
-		}
-	],
-	"require": {
-		"php": ">=5.3.3",
-        "sentry/sentry": "1.6.2"
+    "license": "BSD",
+    "description": "Sentry.io integration for SilverStripe. Binds Sentry.io to SilverStripe's error & exception handling subsystem.",
+    "keywords": ["silverstripe", "sentry", "logging", "logs", "log", "raven", "exception", "error"],
+    "author": [
+        {
+            "name": "Russell Michell",
+            "homepage": "http://theruss.com/"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3",
+        "sentry/sentry": "1.6.2",
+        "silverstripe/framework": ">=3.1.0"
     },
-	"config": {
-		"process-timeout": 900
-	},
-	"minimum-stability": "dev"
+    "config": {
+        "process-timeout": 900
+    },
+    "extra": {
+        "installer-name": "sentry"
+    },
+    "minimum-stability": "dev"
 }

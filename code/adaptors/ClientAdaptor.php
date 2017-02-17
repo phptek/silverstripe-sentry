@@ -1,15 +1,15 @@
 <?php
 
-namespace \Sentry\Adaptors\ClientAdaptor;
+namespace SilverStripeSentry\Adaptors;
 
 /**
  * Adaptor base class.
  * 
  * @author Russell Michell 2017 <russ@theruss.com>
- * @package sentry
+ * @package silverstripe/sentry
  */
 
-abstract class ClientAdaptor
+abstract class ClientAdaptor extends \Object
 {
     /**
      * 
@@ -27,6 +27,11 @@ abstract class ClientAdaptor
      */
     protected $userData;
     
+     /**
+     * @return string
+     */
+    abstract public function level($level);
+    
     /**
      * 
      * @param mixed $opt
@@ -43,6 +48,10 @@ abstract class ClientAdaptor
         return $opts;
     }
     
+    /**
+     * 
+     * @param string $env
+     */
     public function setEnv($env)
     {
         $this->env = $env;

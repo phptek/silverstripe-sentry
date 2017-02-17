@@ -1,56 +1,62 @@
 <?php
 
-namespace \Sentry\Adaptors\RavenClient;
+namespace SilverStripeSentry\Adaptors;
 
-use \Sentry\Adaptors\ClientAdaptor;
+use SilverStripeSentry\Adaptors\ClientAdaptor;
 
 /**
  * The Sentry class simply acts as a bridge between the Raven PHP SDK and
  * SilverStripe itself.
  * 
  * @author Russell Michell 2017 <russ@theruss.com>
- * @package sentry
- * @todo Have a squiz at how the silverstripe-raygun module hooks into SS_Log
+ * @package silverstripe/sentry
  */
 
 class RavenClient extends ClientAdaptor
 {    
     /**
-     * Usage: 
+     *
+     * @var Raven_Client
+     */
+    protected $client;
+    
+    /**
+     * A mapping of log-level values between Zend_Log => Raven_Client
      * 
-     *  $sentry = Injector::inst()->create('Sentry');
-     *  
-     * Or via YML config
+     * @var array
+     */
+    protected $logLevels = [
+        'NOTICE'    => \Raven_Client::INFO,
+        'WARN'      => \Raven_Client::WARNING,
+        'ERR'       => \Raven_Client::ERROR,
+        'EMERG'     => \Raven_Client::FATAL
+    ];
+    
+    /**
+     * It's an ERROR unless proven otherwise!
      * 
-     * SentryClient:
-     *   opts:
-     *     dsn: 'https://123456@sentry.foo.bar/1234'
+     * @var string
+     */
+    private static $default_error_level = 'ERROR';
+    
+    /**
      * 
-     * MyClass:
-     *   sentry:
-     *     Sentry
-     * 
-     * @param array $tags
      * @param array $userData
      * @return \Raven_Client
      */
-    public function __construct(array $tags = [], array $userData = [])
+    public function __construct(array $userData = [])
     {        
         $dsn = $this->opts('dsn');
-        $client = new Raven_Client($dsn);
+        $this->client = new \Raven_Client($dsn);
         
         if (!is_null($env = $this->getEnv())) {
-            $client->setEnvironment($env);
+            $this->client->setEnvironment($env);
         }
         
-        if ($user) {
-            $client->user_context([
+        if ($userData) {
+            $this->client->user_context([
                 'email' => $this->formatExtras($userData, 'email')
             ]);
-        }
-        
-        if ($tags) {
-            $this->setTags($tags);
         }
         
         if ($userData) {
@@ -59,13 +65,41 @@ class RavenClient extends ClientAdaptor
         
         // Installs all available PHP error handlers
         if ($this->config()->install === true) {
-            $client->install();
+            $this->client->install();
         }
         
-        return $client;
+        return $this->client;
     }
     
     /**
+     * @return string
+     */
+    public function level($level)
+    {
+        return isset($this->client->logLevels[$level]) ?
+            $this->client->logLevels[$level] : 
+            $this->client->logLevels[self::$default_error_level];
+    }
+    
+    /**
+     * Physically transport the data to the configured Sentry host.
+     * 
+     * @param string $message
+     * @param array $extras
+     * @param sarray $data
+     * @param string $trace
+     * @return mixed
+     */
+    public function send($message, $extras = [], $data, $trace)
+    {
+        // Raven_Client::captureMessage() returns an ID to uniquely identify each message sent to Sentry
+        $eventId = $this->client->captureMessage($message, $extras, $data, $trace);
+        
+        return $eventId ?: false;
+    }
+    
+    /**
+     * Formats strings for when they're empty.
      * 
      * @param array $data
      * @param string $key
