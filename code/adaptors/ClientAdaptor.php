@@ -27,17 +27,17 @@ abstract class ClientAdaptor extends \Object
      */
     protected $userData;
     
-     /**
-     * @return string
+    /**
+     * @var array
      */
-    abstract public function level($level);
+    protected $extra;
     
     /**
      * 
      * @param mixed $opt
      * @return mixed
      */
-    protected function opts()
+    protected function getOpts($opt)
     {
         $opts = $this->config()->opts;
         
@@ -49,13 +49,9 @@ abstract class ClientAdaptor extends \Object
     }
     
     /**
-     * 
-     * @param string $env
+     * @return string
      */
-    public function setEnv($env)
-    {
-        $this->env = $env;
-    }
+    abstract public function getLevel($level);
     
     /**
      * 
@@ -64,25 +60,6 @@ abstract class ClientAdaptor extends \Object
     public function getEnv()
     {
         return $this->env;
-    }
-    
-    public function setUserData($data)
-    {
-        $this->userData = $data;
-    }
-    
-    /**
-     * 
-     * @return array
-     */
-    public function getUserData()
-    {
-        return $this->userData;
-    }
-    
-    public function setTags($tags)
-    {
-        $this->tags = $tags;
     }
     
     /**
@@ -95,14 +72,19 @@ abstract class ClientAdaptor extends \Object
     }
     
     /**
-     * Allows adaptor instances to pass additional, arbitrary data to Sentry.
-     * 
-     * @param array $extra
-     * @return ClientAdaptor
+     * @return array
      */
-    public function addExtraData(array $data = [])
+    public function getUserData()
     {
-        return $this;
+        return $this->userData;
+    }
+    
+    /**
+     * @return array
+     */
+    public function getExtra()
+    {
+        return $this->extra;
     }
     
 }

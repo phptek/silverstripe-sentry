@@ -15,6 +15,14 @@ use SilverStripeSentry\Adaptors\ClientAdaptor;
 class RavenClient extends ClientAdaptor
 {    
     /**
+     * It's an ERROR unless proven otherwise!
+     * 
+     * @var string
+     * @config
+     */
+    private static $default_error_level = 'ERROR';
+    
+    /**
      *
      * @var Raven_Client
      */
@@ -33,37 +41,23 @@ class RavenClient extends ClientAdaptor
     ];
     
     /**
-     * It's an ERROR unless proven otherwise!
-     * 
-     * @var string
-     */
-    private static $default_error_level = 'ERROR';
-    
-    /**
-     * 
-     * @param array $userData
+     * @param string $e Environment
+     * @param array $u  User data
+     * @param array $t  Tags
+     * @param array $x eXtra
      * @return \Raven_Client
      */
-    public function __construct(array $userData = [])
+    public function __construct($e, $u = [], $t = [], $x = [])
     {        
-        $dsn = $this->opts('dsn');
-        $this->client = new \Raven_Client($dsn);
+        $this->client = new \Raven_Client($this->getOpts('dsn'));
         
-        if (!is_null($env = $this->getEnv())) {
-            $this->client->setEnvironment($env);
-        }
+        // Use the xxx_context() methods
+        $this->client->setEnvironment($e);
+        $this->client->user_context($u);
+        $this->client->tags_context($t);
+        $this->client->extra_context($x);
         
-        if ($userData) {
-            $this->client->user_context([
-                'email' => $this->formatExtras($userData, 'email')
-            ]);
-        }
-        
-        if ($userData) {
-            $this->setUserData($userData);
-        }
-        
-        // Installs all available PHP error handlers
+        // Installs all available PHP error handlers when set
         if ($this->config()->install === true) {
             $this->client->install();
         }
@@ -72,9 +66,9 @@ class RavenClient extends ClientAdaptor
     }
     
     /**
-     * @return string
+     * @inheritdoc
      */
-    public function level($level)
+    public function getLevel($level)
     {
         return isset($this->client->logLevels[$level]) ?
             $this->client->logLevels[$level] : 
@@ -96,20 +90,6 @@ class RavenClient extends ClientAdaptor
         $eventId = $this->client->captureMessage($message, $extras, $data, $trace);
         
         return $eventId ?: false;
-    }
-    
-    /**
-     * Formats strings for when they're empty.
-     * 
-     * @param array $data
-     * @param string $key
-     * @return string
-     */
-    private function formatExtras($data, $key)
-    {
-        $key = strtolower($key);
-        
-        return empty($data[$key]) ? 'N/A' : $data[$key];
     }
 
 }

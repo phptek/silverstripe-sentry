@@ -14,16 +14,15 @@ require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
  * 
  * @author Russell Michell 2017 <russ@theruss.com>
  * @package silverstripe/sentry
- * @todo Ensure the following are reported:
- *  - The URL at which the error occurred
- *  - [DONE] The log-level taken from SS_Log
- *  - [DONE] Any available logged-in member data
- *  - [DONE] The environment
- *  - [DONE] Arbitrary additional "tags" as key=>value pairs, passed at call time
  */
 
 class SentryLogWriter extends \Zend_Log_Writer_Abstract
 {
+    
+    /**
+     * @const string
+     */
+    const SLW_NOOP = 'Unavailable';
     
     /**
      * @var ClientAdaptor
@@ -33,34 +32,35 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     /**
      * The constructor is usually called from factory().
      * 
-     * @param string $env   Optionally pass a different environment.
-     * @param array $tags   Additional key=>value pairs we may wish to report in
-     *                      addition to that which is available by default in the
-     *                      module and in Sentry itself.
+     * @param string $env           Optionally pass a different Environment.
+     * @param array $tags           Additional key=>value Tag pairs we may wish to report in
+     *                              addition to that which is available by default in the
+     *                              module and in Sentry itself.
+     * @param array $extra          Pass arbitrary key>value pairs for display in
+     *                              main Sentry UI.
      */
-    public function __construct($env = null, array $tags = null)
+    public function __construct($env = null, array $tags = [], array $extra = [])
     {
         // Set default environment
         if (is_null($env)) {
             $env = \Director::get_environment_type();  
         }
-        
-        $this->client = \Injector::inst()->create('SentryClient');
-        
-        $this->client->setEnv($env);
-        
+               
         // Set all available user-data
+        $userData = [];
         if ($member = \Member::currentUser()) {
-            $this->client->setUserData($this->user($member));
+            $userData = $this->defaultUserData($member);
         }
         
         // Set any available tags available in SS config
-        if (!is_null($tags)) {
-            $this->client->setTags(array_merge(
-                $this->tags(),
-                $tags
-            ));
-        }
+        $tags = array_merge($this->defaultTags(), $tags);
+        
+        $this->client = \Injector::inst()->createWithArgs('SentryClient', [
+            $env, 
+            $userData, 
+            $tags, 
+            $extra
+        ]);
     }
     
     /**
@@ -74,9 +74,14 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
 	public static function factory($config = [])
     {
         $env = isset($config['env']) ? $config['env'] : null;
-        $tags = isset($config['tags']) ? $config['tags'] : null;
+        $tags = isset($config['tags']) ? $config['tags'] : [];
+        $extra = isset($config['extra']) ? $config['extra'] : [];
         
-		return \Injector::inst()->create('\SilverStripeSentry\SentryLogWriter', $env, $tags);
+		return \Injector::inst()->createWithArgs('\SilverStripeSentry\SentryLogWriter', [
+            $env, 
+            $tags,
+            $extra
+        ]);
 	}
     
     /**
@@ -86,7 +91,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * @param Member $member
      * @return array
      */
-    public function user(\Member $member)
+    public function defaultUserData(\Member $member)
     {
         return [
             'ip_address'    => $this->getIP(),
@@ -105,34 +110,38 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * 
      * @return array
      */
-    public function tags()
+    public function defaultTags()
     {
         return [
             'URL'           => $this->getURL(),
             'Request-Method'=> $this->getReqMethod(),
-            'Request-Type'  => $this->requestType(),
-            'SAPI'          => php_sapi_name(),
-            'controller'    => $this->getController(),
-            'SS-version'    => $this->composerInfo('silverstripe/framework'),
+            'Request-Type'  => $this->getRequestType(),
+            'Response-Code' => $this->getResponseCode(),
+            'SAPI'          => $this->getSAPI(),
+            'Controller'    => $this->getController(),
+            'SS-version'    => $this->getPackageInfo('silverstripe/framework'),
             'Peak-Memory'   => $this->getMem()
         ];
     }
     
     /**
+     * _write() forms the entry point into the physical sending of the error. The 
+     * sending itself is done by the current client's `send()` method.
+     * 
      * @param array $event  An array of data that is create din, and arrives here
      *                      via {@link SS_Log::log()}. 
      * @return void
      */
     protected function _write($event)
     {
-        $message = $event['message']['errstr'];             // From SS_Log::log()
+        $message = $event['message']['errstr'];                 // From SS_Log::log()
+        // The complete compliment of this data comes by use of the xxx_context() functions
+        // in Raven_Client for example.
         $data = [
-            'level'     => $this->client->level($event['priorityName']),
-            'timestamp' => strtotime($event['timestamp']),  // From ???
-            'file'      => $event['message']['errfile'],    // From SS_Log::log()
-            'line'      => $event['message']['errline'],    // From SS_Log::log()
-            'context'   => $event['message']['errcontext'], // From SS_Log::log()
-            'tags'      => $this->client->getTags()
+            'timestamp'     => strtotime($event['timestamp']),  // From ???
+            'file'          => $event['message']['errfile'],    // From SS_Log::log()
+            'line'          => $event['message']['errline'],    // From SS_Log::log()
+            'context'       => $event['message']['errcontext'], // From SS_Log::log()
         ];
         $trace = \SS_Backtrace::filter_backtrace(debug_backtrace(), ['SentryLogWriter->_write']);
         
@@ -146,46 +155,54 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * @param string $package
      * @return string
      */
-    public function composerInfo($package)
+    public function getPackageInfo($package)
     {
         $return = 0;
         $cmd = sprintf('cd %s && composer info %s', BASE_PATH, $package);
-        $result = passthru($cmd, $return);
+        $output = [];
+        $return = 0;
         
-        if ($return === 0 && strlen($result)) {
-            $parts = explode(' ', $result);
-            $version = end($parts);
+        exec($cmd, $output, $return);
+        
+        if ($return === 0 && count($output)) {
+            $matches = [];
+            preg_match_all("#versions\s:[^:]+#", implode('', $output), $matches);
             
-            return var_export($version, true);
+            if(!empty($version = $matches[0][0])) {
+                return trim(var_export($version, true));
+            }
         }
         
-        return 'Unavailable';
+        return self::SLW_NOOP;
     }
     
     /** 
-     * Returns the name of the current controller.
+     * Return the SilverStripe {@link Controller} of the relevant request.
      * 
-     * @return string
+     * @param boolean $rStr
+     * @return mixed
      */
-    public function getController()
+    public function getController($rStr = false)
     {
-        if($curr = @Controller::curr()) {
-            return $curr;
+        if($controller = @\Controller::curr()) {
+            return $rStr ? get_class($controller) : $controller;
         }
         
-        return 'Unavailable';
+        return  $rStr ? self::SLW_NOOP : null;
     }
     
     /**
+     * Return the IP address of the relevant request.
+     * 
      * @return string
      */
     public function getIP()
     {
-        if ($controller = $this->getController()) {
+        if ($controller = $this->getController(false)) {
             return $controller->getRequest()->getIP();
         }
         
-        return 'Unavailable';
+        return self::SLW_NOOP;
     }
     
     /**
@@ -193,9 +210,21 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * 
      * @return string
      */
-    public function requestType()
+    public function getRequestType()
     {
         return \Director::is_ajax() ? 'XMLHttpRequest' : 'Standard';
+    }
+    
+    /**
+     * Return the HTTP response code of the relevant request.
+     * 
+     * @return int
+     */
+    public function getResponseCode()
+    {
+        if ($controller = $this->getController(false)) {
+            return $controller->getResponse()->getStatusCode();
+        }
     }
     
     /**
@@ -206,7 +235,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      */
     public function getOS()
     {
-        return 'Unavailable';
+        return self::SLW_NOOP;
     }
     
     /**
@@ -218,7 +247,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     {
         $peak = memory_get_peak_usage(true) / 1024 / 1024;
         
-        return round($peak, 2) . 'Mb';
+        return (string) round($peak, 2) . 'Mb';
     }
     
     /**
@@ -232,7 +261,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
             return $ua;
         }
         
-        return 'Unavailable';
+        return self::SLW_NOOP;
     }
     
     /**
@@ -246,21 +275,32 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
             return $method;
         }
         
-        return 'Unavailable';
+        return self::SLW_NOOP;
     }
     
     /**
-     * Returns the frontend URL at the time of error, including any GET params.
+     * 
+     * @return string
+     */
+    public function getSAPI()
+    {
+        return php_sapi_name();
+    }
+    
+    /**
+     * Returns the URL at the time of error m(if any), including any GET params.
      * 
      * @return string
      */
     public function getURL()
     {
         if ($controller = $this->getController()) {
-            return $controller->getRequest()->getURL(true);
+            if ($url = $controller->getRequest()->getURL(true)) {
+                return $url;
+            }
         }
         
-        return 'Unavailable';
+        return self::SLW_NOOP;
     }
     
 }
