@@ -1,9 +1,18 @@
+SilverStripeSentry\Adaptors\RavenClient:
+  # Installs all available PHP error handlers
+  # Untested when set to true
+  install: false
+    
 Injector:
-  SentryClient:
-    class: SilverStripeSentry\Adaptors\RavenClient
-    # Installs all available PHP error handlers
-    # Untested when set to true
-    install: false
+  # Just so we can use namespacing
   SentryLogWriter:
     class: SilverStripeSentry\SentryLogWriter
+  SentryClientAdaptor:
+    class: SilverStripeSentry\Adaptors\RavenClient
+    
+SentryLogWriter:
+  dependencies:
+    - client: SentryClientAdaptor
+
+
 

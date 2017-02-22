@@ -19,11 +19,11 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 Add the Composer package as a dependency to your project:
 
-	composer require silverstripe/sentry: 1.0
+	composer require silverstripe/sentry: dev-master
 
-Configure your application or site with the Sentry DSN into your YML config:
+Configure your application or site with the Sentry DSN into your project's YML config:
 
-    ClientAdaptor:
+    SilverStripeSentry\Adaptors\SentryClientAdaptor:
       opts:
         dsn: <sentry_dsn_configured_in_sentry_itself>
 
@@ -37,13 +37,13 @@ Sentry is normally setup once in your _config.php file as follows:
 
 ### Specify an environment
 
-If an environment is not specified, the default is to use `Director::get_environment_type()`.
+If an environment is not specified, the default is to use the return value of `Director::get_environment_type()`.
 
     $config = [];
     $config['env'] = custom_env_func();
     SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
 
-### Specify additional tags to filter on in Sentry UI
+### Specify additional tags to filter-on in the Sentry UI
 
 Sentry allows for custom key-value pairs to be sent as "tags". This then allows for
 messages to be filtered via the Sentry UI.
@@ -55,11 +55,10 @@ messages to be filtered via the Sentry UI.
     ],
     SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
 
-### Specify additional arbitrary data to appear in Sentry UI
+### Specify additional data to appear in the Sentry UI
 
-Once a message is selected within the Sentry UI, additional data can be displayed 
-to further help with debugging. In order to inject this data into a message at runtime, simply pass
-an array as the 3rd parameter to any calls made to `SS_Log::log()`.
+Once a message is selected within the Sentry UI, additional, arbitrary data can be displayed 
+to further help with debugging.
 
     $config = [];
     $config['env'] = custom_env_func();
@@ -70,4 +69,13 @@ an array as the 3rd parameter to any calls made to `SS_Log::log()`.
         'foo-route-exists' = in_array('foo', Controller::curr()->getRequest()->routeParams()) ? 'Yes' : 'No'
     ];
     SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
+
+### Add additional data at runtime through SS_Log:
+
+In order to inject additional data into a message at runtime, simply pass
+an array as the 3rd parameter to any calls made to `SS_Log::log()`.
+
+NOTE: 23/02/17 This is not yet working.
+
+    SS_Log::log('Help, my curry is too hot. I only asked for mild.', SS_Log::ERR, ['heat' => 'hot']);
 

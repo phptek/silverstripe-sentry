@@ -9,7 +9,7 @@ namespace SilverStripeSentry\Adaptors;
  * @package silverstripe/sentry
  */
 
-abstract class ClientAdaptor extends \Object
+abstract class SentryClientAdaptor extends \Object
 {
     /**
      * 
@@ -39,13 +39,13 @@ abstract class ClientAdaptor extends \Object
      */
     protected function getOpts($opt)
     {
-        $opts = $this->config()->opts;
+        $opts = self::config()->opts;
         
         if (!is_null($opts) && !empty($opts[$opt])) {
             return $opts[$opt];
         }
         
-        return $opts;
+        return null;
     }
     
     /**

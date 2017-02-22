@@ -2,7 +2,8 @@
 
 namespace SilverStripeSentry\Adaptors;
 
-use SilverStripeSentry\Adaptors\ClientAdaptor;
+use SilverStripeSentry\Adaptors\SentryClientAdaptor;
+use SilverStripeSentry\Exceptions\SentryLogWriterException;
 
 /**
  * The Sentry class simply acts as a bridge between the Raven PHP SDK and
@@ -12,7 +13,7 @@ use SilverStripeSentry\Adaptors\ClientAdaptor;
  * @package silverstripe/sentry
  */
 
-class RavenClient extends ClientAdaptor
+class RavenClient extends SentryClientAdaptor
 {    
     /**
      * It's an ERROR unless proven otherwise!
@@ -46,10 +47,16 @@ class RavenClient extends ClientAdaptor
      * @param array $t  Tags
      * @param array $x eXtra
      * @return \Raven_Client
+     * @throws SentryLogWriterException
      */
     public function __construct($e, $u = [], $t = [], $x = [])
     {        
-        $this->client = new \Raven_Client($this->getOpts('dsn'));
+        if (!$dsn = $this->getOpts('dsn')) {
+            $msg = sprintf("%s requires a DSN string to be set in config.", __CLASS__);
+            throw new SentryLogWriterException($msg);
+        }
+        
+        $this->client = new \Raven_Client($dsn);
         
         // Use the xxx_context() methods
         $this->client->setEnvironment($e);
@@ -86,7 +93,7 @@ class RavenClient extends ClientAdaptor
      */
     public function send($message, $extras = [], $data, $trace)
     {
-        // Raven_Client::captureMessage() returns an ID to uniquely identify each message sent to Sentry
+        // Raven_Client::captureMessage() returns an ID to identify each message
         $eventId = $this->client->captureMessage($message, $extras, $data, $trace);
         
         return $eventId ?: false;
