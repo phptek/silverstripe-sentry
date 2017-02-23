@@ -1,9 +1,9 @@
 <?php
 
-namespace SilverStripeSentry\Adaptors;
+namespace SilverStripeSentry\Adaptor;
 
-use SilverStripeSentry\Adaptors\SentryClientAdaptor;
-use SilverStripeSentry\Exceptions\SentryLogWriterException;
+use SilverStripeSentry\Adaptor\SentryClientAdaptor;
+use SilverStripeSentry\Exception\SentryLogWriterException;
 
 /**
  * The Sentry class simply acts as a bridge between the Raven PHP SDK and
@@ -50,7 +50,7 @@ class RavenClient extends SentryClientAdaptor
      * @return \Raven_Client
      * @throws SentryLogWriterException
      */
-    public function __construct($e, $u = [], $t = [], $x = [])
+    public function __construct($e = null, $u = [], $t = [], $x = [], $r = null)
     {        
         if (!$dsn = $this->getOpts('dsn')) {
             $msg = sprintf("%s requires a DSN string to be set in config.", __CLASS__);
@@ -64,6 +64,8 @@ class RavenClient extends SentryClientAdaptor
         $this->client->user_context($u);
         $this->client->tags_context($t);
         $this->client->extra_context($x);
+        // Wonky API much?
+        $this->client->setRelease($r);
         
         // Installs all available PHP error handlers when set
         if ($this->config()->install === true) {
@@ -71,6 +73,30 @@ class RavenClient extends SentryClientAdaptor
         }
         
         return $this->client;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setData($field, $data)
+    {
+        switch($field) {
+            case 'env':
+                $this->client->setEnvironment($data);
+                break;
+            case 'tags':
+                $this->client->tags_context($data);
+                break;
+            case 'user':
+                $this->client->user_context($data);
+                break;
+            case 'extra':
+                $this->client->extra_context($data);
+                break;
+            default:
+                $msg = sprintf('Unknown field %s passed to %s.', $field, __FUNCTION__);
+                throw new SentryLogWriterException($msg);
+        }
     }
     
     /**
@@ -84,13 +110,7 @@ class RavenClient extends SentryClientAdaptor
     }
     
     /**
-     * Physically transport the data to the configured Sentry host.
-     * 
-     * @param  string $message
-     * @param  array  $extras
-     * @param  sarray $data
-     * @param  string $trace
-     * @return mixed
+     * @inheritdoc
      */
     public function send($message, $extras = [], $data, $trace)
     {

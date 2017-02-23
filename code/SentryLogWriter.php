@@ -15,6 +15,8 @@ require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
  * @author  Russell Michell 2017 <russ@theruss.com>
  * @package silverstripe/sentry
  * @todo    Baking-in the "client" service dependency is sub-optimal. Injector should handle this.
+ * @todo    Complete and test a YML configured "release" feature, with data taken from composer.lock
+ * @todo    Incorporate Sentry's Breadcrumbs feature
  */
 
 class SentryLogWriter extends \Zend_Log_Writer_Abstract
@@ -24,47 +26,6 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * @const string
      */
     const SLW_NOOP = 'Unavailable';
-    
-    /**
-     * @var ClientAdaptor
-     */
-    protected $client;
-    
-    /**
-     * The constructor is usually called from factory().
-     * 
-     * @param string $env   Optionally pass a different Environment.
-     * @param array  $tags  Additional key=>value Tag pairs we may wish to report in addition to that which is available by default in the module and in Sentry itself. addition to that which is available by default in the module and in Sentry itself.
-     *                              addition to that which is available by default in the
-     *                              module and in Sentry itself.
-     * @param array  $extra Pass arbitrary key>value pairs for display in main Sentry UI. main Sentry UI.
-     *                              main Sentry UI.
-     */
-    public function __construct($env = null, array $tags = [], array $extra = [])
-    {
-        // Set default environment
-        if (is_null($env)) {
-            $env = \Director::get_environment_type();  
-        }
-               
-        // Set all available user-data
-        $userData = $this->defaultUserData();
-        if ($member = \Member::currentUser()) {
-            $userData = $this->defaultUserData($member);
-        }
-        
-        // Set any available tags available in SS config
-        $tags = array_merge($this->defaultTags(), $tags);
-        
-        $this->client = \Injector::inst()->createWithArgs(
-            'SentryClientAdaptor', [
-            $env, 
-            $userData, 
-            $tags, 
-            $extra
-            ]
-        );
-    }
     
     /**
      * For flexibility, the factory should be the usual entry point into this class,
@@ -79,14 +40,29 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         $env = isset($config['env']) ? $config['env'] : null;
         $tags = isset($config['tags']) ? $config['tags'] : [];
         $extra = isset($config['extra']) ? $config['extra'] : [];
-        
-        return \Injector::inst()->createWithArgs(
-            '\SilverStripeSentry\SentryLogWriter', [
-            $env,
-            $tags,
-            $extra
-            ]
-        );
+
+        $writer = \Injector::inst()->get('SentryLogWriter');
+
+        // Set default environment
+        if (is_null($env)) {
+            $env = \Director::get_environment_type();
+        }
+
+        // Set all available user-data
+        $userData = $writer->defaultUserData();
+        if ($member = \Member::currentUser()) {
+            $userData = $writer->defaultUserData($member);
+        }
+
+        // Set any available tags available in SS config
+        $tags = array_merge($writer->defaultTags(), $tags);
+
+        $writer->client->setData('env', $env);
+        $writer->client->setData('user', $userData);
+        $writer->client->setData('tags', $tags);
+        $writer->client->setData('extra', $extra);
+
+        return $writer;
     }
     
     /**
@@ -144,11 +120,11 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      */
     protected function _write($event)
     {
-        $message = $event['message']['errstr'];             // From SS_Log::log()
+        $message = $event['message']['errstr'];                             // From SS_Log::log()
         // The complete compliment of these data come via the Raven_Client::xxx_context() methods
         $data = [
-            'timestamp' => strtotime($event['timestamp']),  // From Zend_Log::log()
-            'extra'     => $event['extra']                  // From _config.php (Optional)
+            'timestamp' => strtotime($event['timestamp']),                  // From Zend_Log::log()
+            'extra'     => isset($event['extra']) ? $event['extra'] : ''    // From _config.php (Optional)
         ];
         $trace = \SS_Backtrace::filter_backtrace(debug_backtrace(), ['SentryLogWriter->_write']);
         

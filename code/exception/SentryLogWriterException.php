@@ -1,9 +1,9 @@
 <?php
 
-namespace SilverStripeSentry\Exceptions;
+namespace SilverStripeSentry\Exception;
 
 /**
- * The module has its own exception subclass to easily distinquish between project
+ * The module has its own exception subclasses to easily distinquish between project
  * and module exceptions.
  * 
  * @author  Russell Michell 2017 <russ@theruss.com>

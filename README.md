@@ -23,7 +23,7 @@ Add the Composer package as a dependency to your project:
 
 Configure your application or site with the Sentry DSN into your project's YML config:
 
-    SilverStripeSentry\Adaptors\SentryClientAdaptor:
+    SilverStripeSentry\Adaptor\SentryClientAdaptor:
       opts:
         dsn: <sentry_dsn_configured_in_sentry_itself>
 
@@ -70,12 +70,26 @@ to further help with debugging.
     ];
     SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
 
-### Add additional data at runtime through SS_Log:
+### Additional data at runtime
 
-In order to inject additional data into a message at runtime, simply pass
-an array as the 3rd parameter to any calls made to `SS_Log::log()`.
+Setting everything you want to send in one sport is somewhat inflexible. Using the following however,
+we can set arbitrary, and context-specific additional data to be sent to Sentry via direct calls to SS_Log::log.
+You can then call SS_Log::log() in your project's customised Exception classes.
 
-NOTE: 23/02/17 This is not yet working.
+In order to inject additional data into a message at runtime, simply pass a 2-dimensional array
+to `SS_Log::log()` who's first key is "extra" and who's value is an array of values
+comprising the data you wish to send:
 
     SS_Log::log('Help, my curry is too hot. I only asked for mild.', SS_Log::ERR, ['extra' => ['heat' => 'hot']]);
 
+## TODO
+
+A rough plan of features to implement. These will be contingent on those Sentry features
+available to us in the default Raven_Client. However, there's nothing stopping us, stop-gapping what Raven_Client 
+doesn't provide (e.g. "fingerprinting") with our own customised curl calls. These could be routed through
+logic in Raven's Raven_CurlHandler class.
+
+* [fingerprinting](https://docs.sentry.io/learn/rollups/#customize-grouping-with-fingerprints)
+* [breadcrumbs](https://docs.sentry.io/learn/breadcrumbs/)
+* Add feature-checking routine for features against the instance of Sentry being called
+* Add release data ([see here](https://docs.sentry.io/clients/php/config/))
