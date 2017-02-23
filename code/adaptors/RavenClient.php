@@ -9,16 +9,17 @@ use SilverStripeSentry\Exceptions\SentryLogWriterException;
  * The Sentry class simply acts as a bridge between the Raven PHP SDK and
  * SilverStripe itself.
  * 
- * @author Russell Michell 2017 <russ@theruss.com>
+ * @author  Russell Michell 2017 <russ@theruss.com>
  * @package silverstripe/sentry
  */
 
 class RavenClient extends SentryClientAdaptor
-{    
+{
+    
     /**
      * It's an ERROR unless proven otherwise!
      * 
-     * @var string
+     * @var    string
      * @config
      */
     private static $default_error_level = 'ERROR';
@@ -43,9 +44,9 @@ class RavenClient extends SentryClientAdaptor
     
     /**
      * @param string $e Environment
-     * @param array $u  User data
-     * @param array $t  Tags
-     * @param array $x eXtra
+     * @param array  $u User data
+     * @param array  $t Tags
+     * @param array  $x eXtra
      * @return \Raven_Client
      * @throws SentryLogWriterException
      */
@@ -85,10 +86,10 @@ class RavenClient extends SentryClientAdaptor
     /**
      * Physically transport the data to the configured Sentry host.
      * 
-     * @param string $message
-     * @param array $extras
-     * @param sarray $data
-     * @param string $trace
+     * @param  string $message
+     * @param  array  $extras
+     * @param  sarray $data
+     * @param  string $trace
      * @return mixed
      */
     public function send($message, $extras = [], $data, $trace)

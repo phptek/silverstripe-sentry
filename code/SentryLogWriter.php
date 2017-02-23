@@ -8,12 +8,13 @@ require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
  * The SentryLogWriter class simply acts as a bridge between the configured Sentry 
  * adaptor and SilverStripe's {@link SS_Log}.
  * 
- * Usage in your project's _config.php for example:
+ * Usage in your project's _config.php for example (See README for expanded examples).
  *  
  *    SS_Log::add_writer(SentryLogWriter::factory(), '<=');
  * 
- * @author Russell Michell 2017 <russ@theruss.com>
+ * @author  Russell Michell 2017 <russ@theruss.com>
  * @package silverstripe/sentry
+ * @todo    Baking-in the "client" service dependency is sub-optimal. Injector should handle this.
  */
 
 class SentryLogWriter extends \Zend_Log_Writer_Abstract
@@ -32,11 +33,11 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     /**
      * The constructor is usually called from factory().
      * 
-     * @param string $env           Optionally pass a different Environment.
-     * @param array $tags           Additional key=>value Tag pairs we may wish to report in
+     * @param string $env   Optionally pass a different Environment.
+     * @param array  $tags  Additional key=>value Tag pairs we may wish to report in addition to that which is available by default in the module and in Sentry itself. addition to that which is available by default in the module and in Sentry itself.
      *                              addition to that which is available by default in the
      *                              module and in Sentry itself.
-     * @param array $extra          Pass arbitrary key>value pairs for display in
+     * @param array  $extra Pass arbitrary key>value pairs for display in main Sentry UI. main Sentry UI.
      *                              main Sentry UI.
      */
     public function __construct($env = null, array $tags = [], array $extra = [])
@@ -55,12 +56,14 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         // Set any available tags available in SS config
         $tags = array_merge($this->defaultTags(), $tags);
         
-        $this->client = \Injector::inst()->createWithArgs('SentryClientAdaptor', [
+        $this->client = \Injector::inst()->createWithArgs(
+            'SentryClientAdaptor', [
             $env, 
             $userData, 
             $tags, 
             $extra
-        ]);
+            ]
+        );
     }
     
     /**
@@ -68,21 +71,23 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * but there's no reason the constructor can't be called directly if for example, only
      * local errror-reporting is required.
      * 
-     * @param array $config
+     * @param  array $config
      * @return SentryLogWriter
      */
-	public static function factory($config = [])
+    public static function factory($config = [])
     {
         $env = isset($config['env']) ? $config['env'] : null;
         $tags = isset($config['tags']) ? $config['tags'] : [];
         $extra = isset($config['extra']) ? $config['extra'] : [];
         
-		return \Injector::inst()->createWithArgs('\SilverStripeSentry\SentryLogWriter', [
+        return \Injector::inst()->createWithArgs(
+            '\SilverStripeSentry\SentryLogWriter', [
             $env,
             $tags,
             $extra
-        ]);
-	}
+            ]
+        );
+    }
     
     /**
      * Used mostly by unit tests.
@@ -98,7 +103,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * Returns a default set of additional data specific to the user's part in
      * the request.
      * 
-     * @param Member $member
+     * @param  Member $member
      * @return array
      */
     public function defaultUserData(\Member $member = null)
@@ -133,16 +138,17 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * _write() forms the entry point into the physical sending of the error. The 
      * sending itself is done by the current client's `send()` method.
      * 
-     * @param array $event  An array of data that is created in, and arrives here
-     *                      via {@link SS_Log::log()}. 
+     * @param  array $event An array of data that is created in, and arrives here via {@link SS_Log::log()} and {@link Zend_Log::log}.
+     *                      via {@link SS_Log::log()} and {@link Zend_Log::log}.
      * @return void
      */
     protected function _write($event)
     {
-        $message = $event['message']['errstr'];                 // From SS_Log::log()
+        $message = $event['message']['errstr'];             // From SS_Log::log()
         // The complete compliment of these data come via the Raven_Client::xxx_context() methods
         $data = [
-            'timestamp' => strtotime($event['timestamp']),  // From ???
+            'timestamp' => strtotime($event['timestamp']),  // From Zend_Log::log()
+            'extra'     => $event['extra']                  // From _config.php (Optional)
         ];
         $trace = \SS_Backtrace::filter_backtrace(debug_backtrace(), ['SentryLogWriter->_write']);
         
@@ -152,14 +158,14 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     /**
      * Return the version of $pkg taken from composer.lock.
      * 
-     * @param string $pkg e.g. "silverstripe/framework"
+     * @param  string $pkg e.g. "silverstripe/framework"
      * @return string
      */
     public function getPackageInfo($pkg)
     {
         $lockFileJSON = BASE_PATH . '/composer.lock';
 
-        if (!file_exists($lockFileJSON)) {
+        if (!file_exists($lockFileJSON) || !is_readable($lockFileJSON)) {
             return self::SLW_NOOP;
         }
 
@@ -197,7 +203,10 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      */
     public function getRequestType()
     {
-        return \Director::is_ajax() ? 'AJAX' : 'Non-Ajax';
+        $isCLI = $this->getSAPI() !== 'cli';
+        $isAjax = \Director::is_ajax();
+
+        return $isCLI && $isAjax ? 'AJAX' : 'Non-Ajax';
     }
     
     /**
@@ -241,7 +250,6 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     }
     
     /**
-     * 
      * @return string
      */
     public function getSAPI()

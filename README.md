@@ -77,5 +77,5 @@ an array as the 3rd parameter to any calls made to `SS_Log::log()`.
 
 NOTE: 23/02/17 This is not yet working.
 
-    SS_Log::log('Help, my curry is too hot. I only asked for mild.', SS_Log::ERR, ['heat' => 'hot']);
+    SS_Log::log('Help, my curry is too hot. I only asked for mild.', SS_Log::ERR, ['extra' => ['heat' => 'hot']]);
 

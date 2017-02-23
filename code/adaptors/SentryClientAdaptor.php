@@ -5,14 +5,13 @@ namespace SilverStripeSentry\Adaptors;
 /**
  * Adaptor base class.
  * 
- * @author Russell Michell 2017 <russ@theruss.com>
+ * @author  Russell Michell 2017 <russ@theruss.com>
  * @package silverstripe/sentry
  */
 
 abstract class SentryClientAdaptor extends \Object
 {
     /**
-     * 
      * @param string
      */
     protected $env;
@@ -33,7 +32,6 @@ abstract class SentryClientAdaptor extends \Object
     protected $extra;
     
     /**
-     * 
      * @param mixed $opt
      * @return mixed
      */
@@ -54,7 +52,6 @@ abstract class SentryClientAdaptor extends \Object
     abstract public function getLevel($level);
     
     /**
-     * 
      * @return string
      */
     public function getEnv()
@@ -63,7 +60,6 @@ abstract class SentryClientAdaptor extends \Object
     }
     
     /**
-     * 
      * @return array
      */
     public function getTags($tags)
