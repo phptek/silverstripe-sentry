@@ -14,15 +14,15 @@ require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
  * 
  * @author  Russell Michell 2017 <russ@theruss.com>
  * @package silverstripe/sentry
- * @todo    Baking-in the "client" service dependency is sub-optimal. Injector should handle this.
- * @todo    Complete and test a YML configured "release" feature, with data taken from composer.lock
- * @todo    Incorporate Sentry's Breadcrumbs feature
  */
 
 class SentryLogWriter extends \Zend_Log_Writer_Abstract
 {
     
     /**
+     * Stipulates what gets shown in the Sentry UI, should some metric not be
+     * available for any reason.
+     *
      * @const string
      */
     const SLW_NOOP = 'Unavailable';
@@ -57,6 +57,9 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         // Set any available tags available in SS config
         $tags = array_merge($writer->defaultTags(), $tags);
 
+        // Set any avalable additional (extra) data
+        $extra = array_merge($writer->defaultExtra(), $extra);
+
         $writer->client->setData('env', $env);
         $writer->client->setData('user', $userData);
         $writer->client->setData('tags', $tags);
@@ -68,7 +71,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     /**
      * Used mostly by unit tests.
      * 
-     * @return ClientAdaptor 
+     * @return SentryClientAdaptor
      */
     public function getClient()
     {
@@ -96,6 +99,10 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * By default, Sentry reports on several mertrics, and we're already sending 
      * {@link Member} data. But there are additional data that would be useful
      * for debugging via the Sentry UI.
+     *
+     * N.b. Tags can be used to group messages within the Sentry UI itself, so you
+     * only want "static" data, not somethng that can drastically or minutely change,
+     * such as memory usage for example.
      * 
      * @return array
      */
@@ -105,7 +112,19 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
             'Request-Method'=> $this->getReqMethod(),
             'Request-Type'  => $this->getRequestType(),
             'SAPI'          => $this->getSAPI(),
-            'SS-Version'    => $this->getPackageInfo('silverstripe/framework'),
+            'SS-Version'    => $this->getPackageInfo('silverstripe/framework')
+        ];
+    }
+
+    /**
+     * Returns a default set of extra data to show upon selecting a message for analysis
+     * in the Sentry UI.
+     *
+     * @return array
+     */
+    public function defaultExtra()
+    {
+        return [
             'Peak-Memory'   => $this->getPeakMemory()
         ];
     }
