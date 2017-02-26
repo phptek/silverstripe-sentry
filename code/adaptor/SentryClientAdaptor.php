@@ -1,12 +1,19 @@
 <?php
 
+/**
+ * Class: SentryClientAdaptor.
+ *
+ * @author  Russell Michell 2017 <russ@theruss.com>
+ * @package silverstripe/sentry
+ */
+
 namespace SilverStripeSentry\Adaptor;
 
 /**
- * Adaptor base class.
- * 
- * @author  Russell Michell 2017 <russ@theruss.com>
- * @package silverstripe/sentry
+ * The SentryClientAdaptor provides the base-class functionality for subclasses
+ * to act bridges between the Raven PHP SDK and the SentryLogWriter class itself.
+ * Any {@link SentryClientAdaptor} subclass should be able to be swapped-out and
+ * used at any point.
  */
 
 abstract class SentryClientAdaptor extends \Object

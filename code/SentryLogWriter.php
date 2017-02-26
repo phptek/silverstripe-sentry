@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Class: SentryLogWriter.
+ *
+ * @author  Russell Michell 2017 <russ@theruss.com>
+ * @package silverstripe/sentry
+ */
+
 namespace SilverStripeSentry;
 
 require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
@@ -8,12 +15,9 @@ require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
  * The SentryLogWriter class simply acts as a bridge between the configured Sentry 
  * adaptor and SilverStripe's {@link SS_Log}.
  * 
- * Usage in your project's _config.php for example (See README for expanded examples).
+ * Usage in your project's _config.php for example (See README for examples).
  *  
- *    SS_Log::add_writer(SentryLogWriter::factory(), '<=');
- * 
- * @author  Russell Michell 2017 <russ@theruss.com>
- * @package silverstripe/sentry
+ *    SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory(), '<=');
  */
 
 class SentryLogWriter extends \Zend_Log_Writer_Abstract
@@ -66,16 +70,6 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         $writer->client->setData('extra', $extra);
 
         return $writer;
-    }
-    
-    /**
-     * Used mostly by unit tests.
-     * 
-     * @return SentryClientAdaptor
-     */
-    public function getClient()
-    {
-        return $this->client;
     }
     
     /**

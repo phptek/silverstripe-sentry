@@ -1,16 +1,21 @@
 <?php
 
+/**
+ * Class: RavenClient.
+ *
+ * @author  Russell Michell 2017 <russ@theruss.com>
+ * @package silverstripe/sentry
+ */
+
 namespace SilverStripeSentry\Adaptor;
 
 use SilverStripeSentry\Adaptor\SentryClientAdaptor;
 use SilverStripeSentry\Exception\SentryLogWriterException;
 
 /**
- * The Sentry class simply acts as a bridge between the Raven PHP SDK and
- * SilverStripe itself.
- * 
- * @author  Russell Michell 2017 <russ@theruss.com>
- * @package silverstripe/sentry
+ * The RavenClient class simply acts as a bridge between the Raven PHP SDK and
+ * the SentryLogWriter class itself. Any {@link SentryClientAdaptor} subclass
+ * should be able to be swapped-out and used at any point.
  */
 
 class RavenClient extends SentryClientAdaptor
@@ -43,14 +48,10 @@ class RavenClient extends SentryClientAdaptor
     ];
     
     /**
-     * @param string $e Environment
-     * @param array  $u User data
-     * @param array  $t Tags
-     * @param array  $x eXtra
-     * @return \Raven_Client
      * @throws SentryLogWriterException
+     * @return void
      */
-    public function __construct($e = null, $u = [], $t = [], $x = [], $r = null)
+    public function __construct()
     {        
         if (!$dsn = $this->getOpts('dsn')) {
             $msg = sprintf("%s requires a DSN string to be set in config.", __CLASS__);
@@ -59,20 +60,10 @@ class RavenClient extends SentryClientAdaptor
         
         $this->client = new \Raven_Client($dsn);
         
-        // Use the xxx_context() methods
-        $this->client->setEnvironment($e);
-        $this->client->user_context($u);
-        $this->client->tags_context($t);
-        $this->client->extra_context($x);
-        // Wonky API much?
-        $this->client->setRelease($r);
-        
         // Installs all available PHP error handlers when set
         if ($this->config()->install === true) {
             $this->client->install();
         }
-        
-        return $this->client;
     }
 
     /**
