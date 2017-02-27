@@ -3,7 +3,7 @@
 [![Scrutinizer](https://scrutinizer-ci.com/g/phptek/silverstripe-sentry/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/phptek/silverstripe-sentry/?branch=master)
 [![License](https://poser.pugx.org/phptek/sentry/license.svg)](https://github.com/phptek/silverstripe-sentry/blob/master/LICENSE.md)
 
-Sentry is an error and exception aggregation service. It takes your application's errors and stores them for later analysis and debugging. 
+[Sentry](https://sentry.io) is an error and exception aggregation service. It takes your application's errors and stores them for later analysis and debugging. 
 
 Imagine this: You see exceptions before your client does. This means the error > report > debug > patch > deploy cycle is the most efficient it can possibly be.
 
@@ -19,7 +19,7 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 Add the Composer package as a dependency to your project:
 
-	composer require silverstripe/sentry: dev-master
+	composer require phptek/sentry: dev-master
 
 Configure your application or site with the Sentry DSN into your project's YML config:
 

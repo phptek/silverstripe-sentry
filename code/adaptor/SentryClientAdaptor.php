@@ -4,7 +4,7 @@
  * Class: SentryClientAdaptor.
  *
  * @author  Russell Michell 2017 <russ@theruss.com>
- * @package silverstripe/sentry
+ * @package phptek/sentry
  */
 
 namespace SilverStripeSentry\Adaptor;
