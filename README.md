@@ -1,7 +1,8 @@
 # Sentry.io integration for SilverStripe
 
 [![Scrutinizer](https://scrutinizer-ci.com/g/phptek/silverstripe-sentry/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/phptek/silverstripe-sentry/?branch=master)
-[![License](https://poser.pugx.org/phptek/sentry/license.svg)](https://github.com/phptek/silverstripe-sentry/blob/master/LICENSE.md)
+[![License](https://poser.pugx.org/silverstripe/sentry/license)](https://packagist.org/packages/silverstripe/sentry)
+[![Latest Stable Version](https://poser.pugx.org/phptek/sentry/v/stable)](https://packagist.org/packages/phptek/sentry)
 
 [Sentry](https://sentry.io) is an error and exception aggregation service. It takes your application's errors and stores them for later analysis and debugging. 
 
