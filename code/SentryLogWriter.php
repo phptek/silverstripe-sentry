@@ -4,7 +4,7 @@
  * Class: SentryLogWriter.
  *
  * @author  Russell Michell 2017 <russ@theruss.com>
- * @package silverstripe/sentry
+ * @package phptek/sentry
  */
 
 namespace SilverStripeSentry;
@@ -70,6 +70,11 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         $writer->client->setData('extra', $extra);
 
         return $writer;
+    }
+
+    public function getClient()
+    {
+        return $this->client;
     }
     
     /**
