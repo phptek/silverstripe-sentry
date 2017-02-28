@@ -15,6 +15,9 @@
         "sentry/sentry": "1.6.2",
         "silverstripe/framework": ">=3.1.0"
     },
+    "require-dev": {
+        "hafriedlander/silverstripe-phockito": "dev-master"
+    },
     "config": {
         "process-timeout": 900
     },

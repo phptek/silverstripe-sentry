@@ -72,6 +72,11 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         return $writer;
     }
 
+    /**
+     * Used in unit tests.
+     *
+     * @return SentryClientAdaptor
+     */
     public function getClient()
     {
         return $this->client;

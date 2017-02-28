@@ -67,6 +67,16 @@ class RavenClient extends SentryClientAdaptor
     }
 
     /**
+     * Used in unit tests.
+     *
+     * @return Raven_Client
+     */
+    public function getSDK()
+    {
+        return $this->client;
+    }
+
+    /**
      * @inheritdoc
      */
     public function setData($field, $data)
