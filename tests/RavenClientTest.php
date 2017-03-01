@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Class: SentryLogWriterTest.
+ * Class: RavenClientTest.
  *
  * @author  Russell Michell 2017 <russ@theruss.com>
  * @package phptek/sentry
@@ -14,20 +14,6 @@ use SilverStripeSentry\SentryLogWriter;
  */
 class RavenClientTest extends \SapphireTest
 {
-    /**
-     *
-     */
-	public function setUp()
-    {
-        parent::setUp();
-
-        // No idea why these are needed, but although the suite runs, we always see
-        // nest/unnest() errors from phpunit..
-        Injector::nest();
-        Config::nest();
-
-		\Phockito::include_hamcrest(true);
-	}
 
     /**
      * Assert that the module's default tags make it through to the reporting process.
@@ -53,6 +39,36 @@ class RavenClientTest extends \SapphireTest
         // Cleanup
         \SS_Log::remove_writer($writer);
     }
+
+    /**
+     * Assert that custom "additional" (user) data makes it through to the
+     * reporting process.
+     *
+     * @return void
+     */
+    public function testdefaultUserDataAvailable()
+    {
+        // Setup the "fixture data" for this test
+        $_SERVER['REMOTE_ADDR'] = '192.168.1.2';
+        $this->logInWithPermission('admin');
+
+        $writer = SentryLogWriter::factory();
+        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
+
+        $ravenSDKClient = $writer->getClient()->getSDK();
+        $userDataThatWasSet = $ravenSDKClient->context->user;
+
+        $this->assertArrayHasKey('IP-Address', $userDataThatWasSet);
+        $this->assertArrayHasKey('ID', $userDataThatWasSet);
+        $this->assertArrayHasKey('Email', $userDataThatWasSet);
+
+        $this->assertEquals('192.168.1.2', $userDataThatWasSet['IP-Address']);
+        $this->assertEquals(2, $userDataThatWasSet['ID']);
+        $this->assertEquals('admin@example.org', $userDataThatWasSet['Email']);
+
+        // Cleanup
+        \SS_Log::remove_writer($writer);
+    }
     
     /**
      * Assert that custom "additional" (extra) data, (extras, tags env etc) makes
@@ -73,7 +89,7 @@ class RavenClientTest extends \SapphireTest
         \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
 
         // Invoke SentryLogWriter::_write()
-        \SS_Log::log('You have 20 seconds to reach minimum safe distance.', \SS_Log::ERR);
+        \SS_Log::log('You have 10 seconds to comply.', \SS_Log::ERR);
 
         $ravenSDKClient = $writer->getClient()->getSDK();
         $envThatWasSet = $ravenSDKClient->getEnvironment();
