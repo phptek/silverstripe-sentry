@@ -32,11 +32,10 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     const SLW_NOOP = 'Unavailable';
     
     /**
-     * For flexibility, the factory should be the usual entry point into this class,
-     * but there's no reason the constructor can't be called directly if for example, only
-     * local errror-reporting is required.
+     * A static constructor as per {@link Zend_Log_FactoryInterface}.
      * 
-     * @param  array $config
+     * @param  array $config    An array of optional additional configuration for
+     *                          passing custom information to Sentry. See the README for more detail.
      * @return SentryLogWriter
      */
     public static function factory($config = [])
@@ -44,16 +43,16 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         $env = isset($config['env']) ? $config['env'] : null;
         $tags = isset($config['tags']) ? $config['tags'] : [];
         $extra = isset($config['extra']) ? $config['extra'] : [];
-
         $writer = \Injector::inst()->get('SentryLogWriter');
 
         // Set default environment
         if (is_null($env)) {
-            $env = \Director::get_environment_type();
+            $env = $writer->defaultEnv();
         }
 
         // Set all available user-data
         $userData = $writer->defaultUserData();
+        
         if ($member = \Member::currentUser()) {
             $userData = $writer->defaultUserData($member);
         }
@@ -81,6 +80,17 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     {
         return $this->client;
     }
+
+    /**
+     * Returns a default environment when one isn't passed to the factory()
+     * method.
+     *
+     * @return string
+     */
+    public function defaultEnv()
+    {
+        return \Director::get_environment_type();
+    }
     
     /**
      * Returns a default set of additional data specific to the user's part in
@@ -99,14 +109,17 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     }
     
     /**
-     * Returns a default set of additional tags we wish to send to Sentry.
+     * Returns a default set of additional "tags" we wish to send to Sentry.
      * By default, Sentry reports on several mertrics, and we're already sending 
      * {@link Member} data. But there are additional data that would be useful
      * for debugging via the Sentry UI.
      *
-     * N.b. Tags can be used to group messages within the Sentry UI itself, so you
-     * only want "static" data, not somethng that can drastically or minutely change,
-     * such as memory usage for example.
+     * These data can augment that which is sent to Sentry at setup
+     * time in _config.php. See the README for more detail.
+     *
+     * N.b. Tags can be used to group messages within the Sentry UI itself, so there
+     * should only be "static" data being sent, not something that can drastically
+     * or minutely change, such as memory usage for example.
      * 
      * @return array
      */
@@ -121,8 +134,10 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     }
 
     /**
-     * Returns a default set of extra data to show upon selecting a message for analysis
-     * in the Sentry UI.
+     * Returns a default set of extra data to show upon selecting a message for
+     * analysis in the Sentry UI. This can augment the data sent to Sentry at setup
+     * time in _config.php as well as at runtime when calling SS_Log itself.
+     * See the README for more detail.
      *
      * @return array
      */
@@ -135,9 +150,9 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     
     /**
      * _write() forms the entry point into the physical sending of the error. The 
-     * sending itself is done by the current client's `send()` method.
+     * sending itself is done by the current adaptor's `send()` method.
      * 
-     * @param  array $event An array of data that is created in, and arrives here via {@link SS_Log::log()} and {@link Zend_Log::log}.
+     * @param  array $event An array of data that is created in, and arrives here
      *                      via {@link SS_Log::log()} and {@link Zend_Log::log}.
      * @return void
      */
@@ -187,6 +202,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     public function getIP()
     {
         $req = \Injector::inst()->create('SS_HTTPRequest', $this->getReqMethod(), '');
+        
         if ($ip = $req->getIP()) {
             return $ip;
         }

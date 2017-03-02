@@ -30,7 +30,6 @@ class RavenClient extends SentryClientAdaptor
     private static $default_error_level = 'ERROR';
     
     /**
-     *
      * @var Raven_Client
      */
     protected $client;
@@ -82,21 +81,21 @@ class RavenClient extends SentryClientAdaptor
     public function setData($field, $data)
     {
         switch($field) {
-            case 'env':
-                $this->client->setEnvironment($data);
-                break;
-            case 'tags':
-                $this->client->tags_context($data);
-                break;
-            case 'user':
-                $this->client->user_context($data);
-                break;
-            case 'extra':
-                $this->client->extra_context($data);
-                break;
-            default:
-                $msg = sprintf('Unknown field %s passed to %s.', $field, __FUNCTION__);
-                throw new SentryLogWriterException($msg);
+        case 'env':
+            $this->client->setEnvironment($data);
+            break;
+        case 'tags':
+            $this->client->tags_context($data);
+            break;
+        case 'user':
+            $this->client->user_context($data);
+            break;
+        case 'extra':
+            $this->client->extra_context($data);
+            break;
+        default:
+            $msg = sprintf('Unknown field %s passed to %s.', $field, __FUNCTION__);
+            throw new SentryLogWriterException($msg);
         }
     }
     

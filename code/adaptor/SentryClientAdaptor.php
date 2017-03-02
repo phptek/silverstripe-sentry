@@ -11,7 +11,7 @@ namespace SilverStripeSentry\Adaptor;
 
 /**
  * The SentryClientAdaptor provides the base-class functionality for subclasses
- * to act bridges between the Raven PHP SDK and the SentryLogWriter class itself.
+ * to act as bridges between the PHP SDK and the SentryLogWriter class itself.
  * Any {@link SentryClientAdaptor} subclass should be able to be swapped-out and
  * used at any point.
  */
@@ -35,9 +35,9 @@ abstract class SentryClientAdaptor extends \Object
     }
 
     /**
-     * Set the data we need from the writer, to the {@link Raven_Client} itself
+     * Set the data we need from the writer.
      *
-     * @param string $field
+     * @param string                 $field
      * @param mixed (string | array) $data
      */
     abstract public function setData($field, $data);
@@ -52,7 +52,7 @@ abstract class SentryClientAdaptor extends \Object
      *
      * @param  string $message
      * @param  array  $extras
-     * @param  sarray $data
+     * @param  array  $data
      * @param  string $trace
      * @return mixed
      */
