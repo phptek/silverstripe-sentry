@@ -14,6 +14,20 @@ use SilverStripeSentry\SentryLogWriter;
  */
 class RavenClientTest extends \SapphireTest
 {
+    /**
+     * Setup a dummy Sentry DSN so our errors are not actually sent
+     * anywhere
+     */
+    public function setUpOnce()
+    {
+        parent::setUpOnce();
+
+        Config::inst()->update(
+            'SilverStripeSentry\Adaptor\SentryClientAdaptor',
+            'opts',
+             ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
+        );
+    }
 
     /**
      * Assert that the module's default tags make it through to the reporting process.

@@ -17,18 +17,25 @@ use SilverStripeSentry\SentryLogWriter;
 class SentryLogWriterTest extends \SapphireTest
 {
     /**
-     * 
+     * Setup test-specific context
      */
-	public function setUp()
+	public function setUpOnce()
     {
-        parent::setUp();
+        parent::setUpOnce();
 
-        // No idea why these are needed, but although the suite runs, we always see
-        // nest/unnest() errors from phpunit..
+        // No idea why these need to be explicitly set. Although the suite runs,
+        // we always see nest() / unnest() errors from phpunit..
         Injector::nest();
         Config::nest();
 
 		\Phockito::include_hamcrest(true);
+
+        // Setup a dummy Sentry DSN so our errors are not actually sent anywhere
+        Config::inst()->update(
+            'SilverStripeSentry\Adaptor\SentryClientAdaptor',
+            'opts',
+            ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
+        );
 	}
 
     /**
@@ -49,9 +56,6 @@ class SentryLogWriterTest extends \SapphireTest
 
         // Verificate
         \Phockito::verify($spy, 1)->_write(arrayValue());
-
-        // Cleanup
-        \SS_Log::remove_writer($spy);
     }
 
 }
