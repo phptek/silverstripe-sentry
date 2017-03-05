@@ -14,6 +14,7 @@ use SilverStripeSentry\SentryLogWriter;
  */
 class RavenClientTest extends \SapphireTest
 {
+    
     /**
      * Setup a dummy Sentry DSN so our errors are not actually sent
      * anywhere
@@ -21,6 +22,8 @@ class RavenClientTest extends \SapphireTest
     public function setUpOnce()
     {
         parent::setUpOnce();
+
+        $this->usesDatabase = true;
 
         Config::inst()->update(
             'SilverStripeSentry\Adaptor\SentryClientAdaptor',
