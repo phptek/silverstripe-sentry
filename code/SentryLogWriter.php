@@ -243,7 +243,9 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      */
     public function getUserAgent()
     {
-        if (!empty($ua = @$_SERVER['HTTP_USER_AGENT'])) {
+        $ua = @$_SERVER['HTTP_USER_AGENT'];
+        
+        if (!empty($ua)) {
             return $ua;
         }
         
@@ -257,7 +259,9 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      */
     public function getReqMethod()
     {
-        if (!empty($method = @$_SERVER['REQUEST_METHOD'])) {
+        $method = @$_SERVER['REQUEST_METHOD'];
+        
+        if (!empty($method)) {
             return $method;
         }
         
