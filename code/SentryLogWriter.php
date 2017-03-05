@@ -162,7 +162,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         // The complete compliment of these data come via the Raven_Client::xxx_context() methods
         $data = [
             'timestamp' => strtotime($event['timestamp']),                  // From Zend_Log::log()
-            'extra'     => isset($event['extra']) ? $event['extra'] : ''    // From _config.php (Optional)
+            'extra'     => isset($event['extra']) ? $event['extra'] : []    // From _config.php (Optional)
         ];
         $trace = \SS_Backtrace::filter_backtrace(debug_backtrace(), ['SentryLogWriter->_write']);
         
