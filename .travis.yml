@@ -8,7 +8,6 @@ php:
   - 5.4
   - 5.5
   - 5.6
-  - 7.0
 
 env:
   - DB=MYSQL CORE_RELEASE=3.2
@@ -25,8 +24,6 @@ matrix:
       env: DB=MYSQL CORE_RELEASE=3.4
     - php: 5.6
       env: DB=MYSQL CORE_RELEASE=3.5
-  allow_failures:
-    - php: 7.0
 
 before_script:
   - composer self-update || true
@@ -41,5 +38,4 @@ script:
 branches:
   only: 
     - master
-    - develop
 

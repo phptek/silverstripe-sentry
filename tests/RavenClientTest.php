@@ -7,7 +7,7 @@
  * @package phptek/sentry
  */
 
-use SilverStripeSentry\SentryLogWriter;
+use phptek\Sentry\SentryLogWriter;
 
 /**
  * Excercises RavenClient.
@@ -32,7 +32,7 @@ class RavenClientTest extends \SapphireTest
         parent::setUpOnce();
 
         Config::inst()->update(
-            'SilverStripeSentry\Adaptor\SentryClientAdaptor',
+            'phptek\Sentry\Adaptor\SentryClientAdaptor',
             'opts',
              ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
         );

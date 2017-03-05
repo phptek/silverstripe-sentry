@@ -7,10 +7,10 @@
  * @package phptek/sentry
  */
 
-namespace SilverStripeSentry\Adaptor;
+namespace phptek\Sentry\Adaptor;
 
-use SilverStripeSentry\Adaptor\SentryClientAdaptor;
-use SilverStripeSentry\Exception\SentryLogWriterException;
+use phptek\Sentry\Adaptor\SentryClientAdaptor;
+use phptek\Sentry\Exception\SentryLogWriterException;
 
 /**
  * The RavenClient class simply acts as a bridge between the Raven PHP SDK and

@@ -9,7 +9,7 @@
 
 require_once THIRDPARTY_PATH . '/Zend/Log/Formatter/Interface.php';
 
-use SilverStripeSentry\SentryLogWriter;
+use phptek\Sentry\SentryLogWriter;
 
 /**
  * Excercises SentryLogWriter.
@@ -25,14 +25,14 @@ class SentryLogWriterTest extends \SapphireTest
 
         // No idea why these need to be explicitly set. Although the suite runs,
         // we always see nest() / unnest() errors from phpunit..
-        Injector::nest();
-        Config::nest();
+        \Injector::nest();
+        \Config::nest();
 
 		\Phockito::include_hamcrest(true);
 
         // Setup a dummy Sentry DSN so our errors are not actually sent anywhere
-        Config::inst()->update(
-            'SilverStripeSentry\Adaptor\SentryClientAdaptor',
+        \Config::inst()->update(
+            'phptek\Sentry\Adaptor\SentryClientAdaptor',
             'opts',
             ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
         );
@@ -46,7 +46,7 @@ class SentryLogWriterTest extends \SapphireTest
     public function testWriteIsCalled()
     {
         // Mock the SentryLogWriter
-        $spy = \Phockito::spy('SilverStripeSentry\SentryLogWriter');
+        $spy = \Phockito::spy('phptek\Sentry\SentryLogWriter');
 
         // Register it
         \SS_Log::add_writer($spy, \SS_Log::ERR, '<=');

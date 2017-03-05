@@ -24,7 +24,7 @@ Add the Composer package as a dependency to your project:
 
 Configure your application or site with the Sentry DSN into your project's YML config:
 
-    SilverStripeSentry\Adaptor\SentryClientAdaptor:
+    phptek\Sentry\Adaptor\SentryClientAdaptor:
       opts:
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
         dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
@@ -33,7 +33,7 @@ Configure your application or site with the Sentry DSN into your project's YML c
 
 Sentry is normally setup once in your project's `_config.php` as follows, but see the [usage docs](docs/usage.md) for more detail and options.
 
-    SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
+    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
 
 ## TODO
 

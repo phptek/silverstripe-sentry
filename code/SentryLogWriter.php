@@ -7,7 +7,7 @@
  * @package phptek/sentry
  */
 
-namespace SilverStripeSentry;
+namespace phptek\Sentry;
 
 require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
 
@@ -17,7 +17,7 @@ require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
  * 
  * Usage in your project's _config.php for example (See README for examples).
  *  
- *    SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory(), '<=');
+ *    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), '<=');
  */
 
 class SentryLogWriter extends \Zend_Log_Writer_Abstract

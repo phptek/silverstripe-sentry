@@ -7,7 +7,7 @@
  * @package phptek/sentry
  */
 
-namespace SilverStripeSentry\Adaptor;
+namespace phptek\Sentry\Adaptor;
 
 /**
  * The SentryClientAdaptor provides the base-class functionality for subclasses

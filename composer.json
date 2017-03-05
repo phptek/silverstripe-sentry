@@ -11,9 +11,9 @@
         }
     ],
     "require": {
-        "php": ">=5.3.3",
+        "php": ">=5.3.3,<7",
         "sentry/sentry": "1.6.2",
-        "silverstripe/framework": ">=3.1.0"
+        "silverstripe/framework": ">=3.1.0,<4"
     },
     "require-dev": {
         "hafriedlander/silverstripe-phockito": "dev-master"

@@ -5,14 +5,14 @@ use-case.
 
 ## Basic
 
-    SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
+    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
 
 ## Set an environment
 
 If an environment is not specified, the default is to use the return value of `Director::get_environment_type()`.
 
     $config = ['env' => 'live'];
-    SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
+    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
 
 ## Set tags
 
@@ -29,7 +29,7 @@ instead.
             'Unique-ID' => 44
         ]
     ];
-    SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
+    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
 
 ## Set extras
 
@@ -50,13 +50,13 @@ from within `_config.php` or at runtime, via passing the optional 3rd parameter 
             'Cats' => 'Are furry'
         ]
     ];
-    SS_Log::add_writer(\SilverStripeSentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
+    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
 
 ### Via SS_Log::log()
 
-Setting-up everything you want think you want to send, all from one spot in `_config.phjp` is somewhat inflexible. Using the following however,
-we can set additional, arbitrary and context-specific data to be sent to Sentry via calls to SS_Log::log and its optional
-3rd parameter. You can then call SS_Log::log() in your project's customised Exception classes.
+Setting-up everything you think you want to send, all from one spot in `_config.php` is somewhat inflexible. Using the following however,
+we can set additional, arbitrary and context-specific data to be sent to Sentry via calls to `SS_Log::log()` and its optional
+3rd parameter. You can then call `SS_Log::log()` in your project's customised Exception classes.
 
 In order to inject additional data into a message at runtime, simply pass a 2-dimensional array
 to the 3rd parameter of `SS_Log::log()` who's first key is "extra" and who's value is an array of values
