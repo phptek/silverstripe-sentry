@@ -14,7 +14,15 @@ use SilverStripeSentry\SentryLogWriter;
  */
 class RavenClientTest extends \SapphireTest
 {
-    
+
+    /**
+     * In the absence of fixture files, this is needed to force SaphhireTest into
+     * creating us a test DB.
+     *
+     * @var boolean.
+     */
+    protected $usesDatabase = true;
+
     /**
      * Setup a dummy Sentry DSN so our errors are not actually sent
      * anywhere
@@ -22,8 +30,6 @@ class RavenClientTest extends \SapphireTest
     public function setUpOnce()
     {
         parent::setUpOnce();
-
-        $this->usesDatabase = true;
 
         Config::inst()->update(
             'SilverStripeSentry\Adaptor\SentryClientAdaptor',
@@ -80,7 +86,7 @@ class RavenClientTest extends \SapphireTest
         $this->assertArrayHasKey('Email', $userDataThatWasSet);
 
         $this->assertEquals('192.168.1.2', $userDataThatWasSet['IP-Address']);
-        $this->assertEquals(2, $userDataThatWasSet['ID']);
+        $this->assertEquals(1, $userDataThatWasSet['ID']);
         $this->assertEquals('admin@example.org', $userDataThatWasSet['Email']);
 
         // Cleanup
