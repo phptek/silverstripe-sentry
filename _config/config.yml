@@ -1,21 +1,21 @@
 ---
 Name: silverstripe-sentry
-After:
-  - 'framework/*'
-  - 'cms/*'
 ---
 
-phptek\Sentry\SentryLogWriter:
-  dependencies:
-    client: %$SentryClientAdaptor
-    
 phptek\Sentry\Adaptor\RavenClient:
-  # Installs all available PHP error handlers
-  # Untested when set to true
-  install: false
+  install: true
 
-Injector:
-  SentryLogWriter:
-    class: phptek\Sentry\SentryLogWriter
-  SentryClientAdaptor:
-    class: phptek\Sentry\Adaptor\RavenClient
+SilverStripe\Core\Injector\Injector:
+  Logger:
+    calls:
+      # Try popHandler to lose the defaukt SS4 handler?
+      SentryHandler: [pushHandler, [ %$SentryHandler ]] 
+  SentryHandler:
+    class: phptek\Sentry\SentryHandler
+    constructor:
+      client: %$phptek\Sentry\Adaptor\RavenClient
+    properties:
+      Formatter: %$SentryLogFormatter
+  SentryLogFormatter:
+    class: phptek\Sentry\SentryLogFormatter
+    

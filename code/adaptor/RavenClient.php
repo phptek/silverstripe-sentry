@@ -14,7 +14,7 @@ use phptek\Sentry\Exception\SentryLogWriterException;
 
 /**
  * The RavenClient class simply acts as a bridge between the Raven PHP SDK and
- * the SentryLogWriter class itself. Any {@link SentryClientAdaptor} subclass
+ * the SentryHandler class itself. Any {@link SentryClientAdaptor} subclass
  * should be able to be swapped-out and used at any point.
  */
 

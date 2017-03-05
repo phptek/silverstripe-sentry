@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Class: SentryLogWriter.
+ * Class: SentryHandler.
  *
  * @author  Russell Michell 2017 <russ@theruss.com>
  * @package phptek/sentry
@@ -9,18 +9,23 @@
 
 namespace phptek\Sentry;
 
-require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
+use Monolog\Handler\AbstractProcessingHandler;
+use SilverStripe\Dev\Backtrace;
+use SilverStripe\Security\Member;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Control\Director;
+use SilverStripe\Control\HTTPRequest;
 
 /**
- * The SentryLogWriter class simply acts as a bridge between the configured Sentry 
+ * The SentryHandler class simply acts as a bridge between the configured Sentry
  * adaptor and SilverStripe's {@link SS_Log}.
  * 
- * Usage in your project's _config.php for example (See README for examples).
- *  
- *    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), '<=');
+ * Usage in your project's config.yml for example (See README for examples).
+ *
+ * TODO
  */
 
-class SentryLogWriter extends \Zend_Log_Writer_Abstract
+class SentryHandler extends AbstractProcessingHandler
 {
     
     /**
@@ -36,39 +41,40 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * 
      * @param  array $config    An array of optional additional configuration for
      *                          passing custom information to Sentry. See the README for more detail.
-     * @return SentryLogWriter
+     * @return void
      */
-    public static function factory($config = [])
+    public function __construct($client, $config = [])
     {
+        parent::__construct();
+
         $env = isset($config['env']) ? $config['env'] : null;
         $tags = isset($config['tags']) ? $config['tags'] : [];
         $extra = isset($config['extra']) ? $config['extra'] : [];
-        $writer = \Injector::inst()->get('SentryLogWriter');
 
         // Set default environment
         if (is_null($env)) {
-            $env = $writer->defaultEnv();
+            $env = $this->defaultEnv();
         }
 
         // Set all available user-data
-        $userData = $writer->defaultUserData();
+        $userData = $this->defaultUserData();
         
-        if ($member = \Member::currentUser()) {
-            $userData = $writer->defaultUserData($member);
+        if ($member = Member::currentUser()) {
+            $userData = $this->defaultUserData($member);
         }
 
         // Set any available tags available in SS config
-        $tags = array_merge($writer->defaultTags(), $tags);
+        $tags = array_merge($this->defaultTags(), $tags);
 
         // Set any avalable additional (extra) data
-        $extra = array_merge($writer->defaultExtra(), $extra);
+        $extra = array_merge($this->defaultExtra(), $extra);
 
-        $writer->client->setData('env', $env);
-        $writer->client->setData('user', $userData);
-        $writer->client->setData('tags', $tags);
-        $writer->client->setData('extra', $extra);
+        $this->client = $client;
 
-        return $writer;
+        $this->client->setData('env', $env);
+        $this->client->setData('user', $userData);
+        $this->client->setData('tags', $tags);
+        $this->client->setData('extra', $extra);
     }
 
     /**
@@ -89,7 +95,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      */
     public function defaultEnv()
     {
-        return \Director::get_environment_type();
+        return Director::get_environment_type();
     }
     
     /**
@@ -99,7 +105,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * @param  Member $member
      * @return array
      */
-    public function defaultUserData(\Member $member = null)
+    public function defaultUserData(Member $member = null)
     {
         return [
             'IP-Address'    => $this->getIP(),
@@ -152,19 +158,18 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * _write() forms the entry point into the physical sending of the error. The 
      * sending itself is done by the current adaptor's `send()` method.
      * 
-     * @param  array $event An array of data that is created in, and arrives here
+     * @param  array $record An array of data that is created in, and arrives here
      *                      via {@link SS_Log::log()} and {@link Zend_Log::log}.
      * @return void
      */
-    protected function _write($event)
+    protected function write(array $record)
     {
-        $message = $event['message']['errstr'];                             // From SS_Log::log()
-        // The complete compliment of these data come via the Raven_Client::xxx_context() methods
+        $message = !empty($record['message']) ? $record['message'] : self::SLW_NOOP;
         $data = [
-            'timestamp' => strtotime($event['timestamp']),                  // From Zend_Log::log()
-            'extra'     => isset($event['extra']) ? $event['extra'] : []    // From _config.php (Optional)
+            'timestamp' => $record['datetime']->getTimestamp(),                 // From Logger::addRecord()
+            'extra'     => isset($record['extra']) ? $record['extra'] : []      // From Logger::addRecord()
         ];
-        $trace = \SS_Backtrace::filter_backtrace(debug_backtrace(), ['SentryLogWriter->_write']);
+        $trace = Backtrace::filter_backtrace(debug_backtrace(), ['SentryHandler->write']);
         
         $this->client->send($message, [], $data, $trace);
     }
@@ -201,7 +206,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      */
     public function getIP()
     {
-        $req = \Injector::inst()->create('SS_HTTPRequest', $this->getReqMethod(), '');
+        $req = Injector::inst()->create('\SilverStripe\Control\HTTPRequest', $this->getReqMethod(), '');
         
         if ($ip = $req->getIP()) {
             return $ip;
@@ -219,7 +224,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     public function getRequestType()
     {
         $isCLI = $this->getSAPI() !== 'cli';
-        $isAjax = \Director::is_ajax();
+        $isAjax = Director::is_ajax();
 
         return $isCLI && $isAjax ? 'AJAX' : 'Non-Ajax';
     }

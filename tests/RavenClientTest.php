@@ -7,12 +7,17 @@
  * @package phptek/sentry
  */
 
-use phptek\Sentry\SentryLogWriter;
+use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Injector\Injector;
+use Monolog\Logger;
 
 /**
  * Excercises RavenClient.
+ *
+ * @todo Ensure we test in all of SS4's environment modes
  */
-class RavenClientTest extends \SapphireTest
+class RavenClientTest extends SapphireTest
 {
 
     /**
@@ -31,6 +36,7 @@ class RavenClientTest extends \SapphireTest
     {
         parent::setUpOnce();
 
+        Config::nest();
         Config::inst()->update(
             'phptek\Sentry\Adaptor\SentryClientAdaptor',
             'opts',
@@ -45,22 +51,18 @@ class RavenClientTest extends \SapphireTest
      */
     public function testDefaultTagsAvailable()
     {
-        $writer = SentryLogWriter::factory();
-        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
+        // Setup and invoke the logger
+        $logger = Injector::inst()->get('Logger');
+        $logger->log(Logger::ERROR, 'You have 30 seconds to reach minimum safe distance.', ['code' => 1]);
+        $handler = $logger->getHandlers()[0]; // Is there a batter way to do this?
 
-        // Invoke SentryLogWriter::_write()
-        \SS_Log::log('You have 30 seconds to reach minimum safe distance.', \SS_Log::ERR);
-
-        $ravenSDKClient = $writer->getClient()->getSDK();
+        $ravenSDKClient = $handler->getClient()->getSDK();
         $tagsThatWereSet = $ravenSDKClient->context->tags;
 
         $this->assertArrayHasKey('Request-Method', $tagsThatWereSet);
         $this->assertArrayHasKey('Request-Type', $tagsThatWereSet);
         $this->assertArrayHasKey('SAPI', $tagsThatWereSet);
         $this->assertArrayHasKey('SS-Version', $tagsThatWereSet);
-
-        // Cleanup
-        \SS_Log::remove_writer($writer);
     }
 
     /**
@@ -75,10 +77,12 @@ class RavenClientTest extends \SapphireTest
         $_SERVER['REMOTE_ADDR'] = '192.168.1.2';
         $this->logInWithPermission('admin');
 
-        $writer = SentryLogWriter::factory();
-        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
+        // Setup and invoke the logger
+        $logger = Injector::inst()->get('Logger');
+        $logger->log(Logger::ERROR, 'You have 10 seconds to comply.', ['code' => 1]);
+        $handler = $logger->getHandlers()[0]; // Is there a batter way to do this?
 
-        $ravenSDKClient = $writer->getClient()->getSDK();
+        $ravenSDKClient = $handler->getClient()->getSDK();
         $userDataThatWasSet = $ravenSDKClient->context->user;
 
         $this->assertArrayHasKey('IP-Address', $userDataThatWasSet);
@@ -88,9 +92,6 @@ class RavenClientTest extends \SapphireTest
         $this->assertEquals('192.168.1.2', $userDataThatWasSet['IP-Address']);
         $this->assertEquals(1, $userDataThatWasSet['ID']);
         $this->assertEquals('admin@example.org', $userDataThatWasSet['Email']);
-
-        // Cleanup
-        \SS_Log::remove_writer($writer);
     }
     
     /**
@@ -108,22 +109,28 @@ class RavenClientTest extends \SapphireTest
             ],
             'env' => 'live'
         ];
-        $writer = SentryLogWriter::factory($fixture);
-        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
 
-        // Invoke SentryLogWriter::_write()
-        \SS_Log::log('You have 10 seconds to comply.', \SS_Log::ERR);
+        Config::inst()->update(
+            'phptek\Sentry\SentryHandler',
+            'constructor',
+            [
+                'client' => '%$phptek\Sentry\Adaptor\RavenClient',
+                $fixture
+            ]
+        );
 
-        $ravenSDKClient = $writer->getClient()->getSDK();
+        // Setup and invoke the logger
+        $logger = Injector::inst()->get('Logger');
+        $logger->log(Logger::ERROR, 'Nuke it from orbit.', ['code' => 1]);
+        $handler = $logger->getHandlers()[0]; // Is there a batter way to do this?
+
+        $ravenSDKClient = $handler->getClient()->getSDK();
         $envThatWasSet = $ravenSDKClient->getEnvironment();
         $xtraThatWasSet = $ravenSDKClient->context->extra;
 
         $this->assertEquals('live', $envThatWasSet);
         $this->assertArrayHasKey('foo', $xtraThatWasSet);
         $this->assertContains('bar', $xtraThatWasSet['foo']);
-
-        // Cleanup
-        \SS_Log::remove_writer($writer);
     }
 
 }

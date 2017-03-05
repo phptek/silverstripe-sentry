@@ -9,6 +9,8 @@
 
 namespace phptek\Sentry\Adaptor;
 
+use SilverStripe\Core\Object;
+
 /**
  * The SentryClientAdaptor provides the base-class functionality for subclasses
  * to act as bridges between the PHP SDK and the SentryLogWriter class itself.
@@ -16,7 +18,7 @@ namespace phptek\Sentry\Adaptor;
  * used at any point.
  */
 
-abstract class SentryClientAdaptor extends \Object
+abstract class SentryClientAdaptor extends Object
 {
 
     /**
