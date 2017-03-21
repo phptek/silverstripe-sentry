@@ -8,14 +8,11 @@ phptek\Sentry\Adaptor\RavenClient:
 SilverStripe\Core\Injector\Injector:
   Logger:
     calls:
-      # Try popHandler to lose the defaukt SS4 handler?
-      SentryHandler: [pushHandler, [ %$SentryHandler ]] 
+      - [ pushHandler, [ %$SentryHandler ]] 
   SentryHandler:
     class: phptek\Sentry\SentryHandler
     constructor:
       client: %$phptek\Sentry\Adaptor\RavenClient
     properties:
-      Formatter: %$SentryLogFormatter
-  SentryLogFormatter:
-    class: phptek\Sentry\SentryLogFormatter
+      formatter: %$Monolog\Formatter\JsonFormatter
     

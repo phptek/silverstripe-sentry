@@ -33,6 +33,11 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 Configure your application or site with the Sentry DSN into your project's YML config:
 
+    ---
+    Name: prod-and-uat-errors
+    Except:
+      environment: dev
+    ---
     phptek\Sentry\Adaptor\SentryClientAdaptor:
       opts:
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"

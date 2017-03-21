@@ -22,7 +22,14 @@ use SilverStripe\Control\HTTPRequest;
  * 
  * Usage in your project's config.yml for example (See README for examples).
  *
- * TODO
+ * ---
+ * Name: prod-and-uat-errors
+ * Except:
+ *   environment: dev
+ * ---
+ * phptek\Sentry\Adaptor\SentryClientAdaptor:
+ *   opts:
+ *     dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
  */
 
 class SentryHandler extends AbstractProcessingHandler
@@ -37,10 +44,9 @@ class SentryHandler extends AbstractProcessingHandler
     const SLW_NOOP = 'Unavailable';
     
     /**
-     * A static constructor as per {@link Zend_Log_FactoryInterface}.
-     * 
-     * @param  array $config    An array of optional additional configuration for
-     *                          passing custom information to Sentry. See the README for more detail.
+     * @param phptek\Sentry\Adaptor\RavenClient $client The local client to use.
+     * @param array $config An array of optional additional configuration for
+     *                      passing custom information to Sentry. See the README for more detail.
      * @return void
      */
     public function __construct($client, $config = [])
@@ -88,8 +94,7 @@ class SentryHandler extends AbstractProcessingHandler
     }
 
     /**
-     * Returns a default environment when one isn't passed to the factory()
-     * method.
+     * Returns a default environment when one isn't given to us.
      *
      * @return string
      */

@@ -36,7 +36,6 @@ class RavenClientTest extends SapphireTest
     {
         parent::setUpOnce();
 
-        Config::nest();
         Config::inst()->update(
             'phptek\Sentry\Adaptor\SentryClientAdaptor',
             'opts',
@@ -110,18 +109,16 @@ class RavenClientTest extends SapphireTest
             'env' => 'live'
         ];
 
-        Config::inst()->update(
-            'phptek\Sentry\SentryHandler',
-            'constructor',
-            [
+        Injector::inst()->updateSpecConstructor([
+            'constructor' => [
                 'client' => '%$phptek\Sentry\Adaptor\RavenClient',
-                $fixture
-            ]
+                'config' => $fixture
+            ]]
         );
 
         // Setup and invoke the logger
         $logger = Injector::inst()->get('Logger');
-        $logger->log(Logger::ERROR, 'Nuke it from orbit.', ['code' => 1]);
+        $logger->log(Logger::ERROR, 'Nuke it from orbit.');
         $handler = $logger->getHandlers()[0]; // Is there a batter way to do this?
 
         $ravenSDKClient = $handler->getClient()->getSDK();
@@ -131,6 +128,9 @@ class RavenClientTest extends SapphireTest
         $this->assertEquals('live', $envThatWasSet);
         $this->assertArrayHasKey('foo', $xtraThatWasSet);
         $this->assertContains('bar', $xtraThatWasSet['foo']);
+        
+        Config::unnest();
+        
     }
 
 }
