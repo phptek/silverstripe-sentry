@@ -7,6 +7,7 @@
  * @package phptek/sentry
  */
 
+use phptek\Sentry\SentryHandler;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
@@ -41,21 +42,6 @@ class RavenClientTest extends SapphireTest
             'opts',
              ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
         );
-        
-        // Register SentryLogWriter with some custom context
-        $fixture = [
-            'extra' => [
-                'foo' => 'bar'
-            ],
-            'env' => 'live'
-        ];
-        
-        Config::inst()->update(
-            'SentryHandler',
-            'constructor',
-            $fixture
-        );
-        
     }
 
     /**
@@ -116,11 +102,17 @@ class RavenClientTest extends SapphireTest
      */
     public function testExtrasAvailable()
     {
-
+        // TODO How do we do this proper DI style?
+        $client = Injector::inst()->create('phptek\Sentry\Adaptor\RavenClient');
+        $handler = Injector::inst()->createWithArgs('SentryHandler', [$client, [
+            'env' => 'live',
+            'extra' => ['foo' => 'bar']
+        ]]);
+        
         // Setup and invoke the logger
         $logger = Injector::inst()->get('Logger');
+        $logger->pushHandler($handler);
         $logger->log(Logger::INFO, 'Nuke it from orbit.'); // Use INFO so as to not print exception to stdout
-        $handler = $logger->getHandlers()[0]; // Is there a batter way to do this?
 
         $ravenSDKClient = $handler->getClient()->getSDK();
         $envThatWasSet = $ravenSDKClient->getEnvironment();
@@ -129,9 +121,6 @@ class RavenClientTest extends SapphireTest
         $this->assertEquals('live', $envThatWasSet);
         $this->assertArrayHasKey('foo', $xtraThatWasSet);
         $this->assertContains('bar', $xtraThatWasSet['foo']);
-        
-        Config::unnest();
-        
     }
 
 }

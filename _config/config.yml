@@ -13,6 +13,7 @@ SilverStripe\Core\Injector\Injector:
     class: phptek\Sentry\SentryHandler
     constructor:
       client: %$phptek\Sentry\Adaptor\RavenClient
+      config: []
     properties:
       formatter: %$Monolog\Formatter\JsonFormatter
     

@@ -28,7 +28,7 @@ class SentrHandlerTest extends SapphireTest
         Injector::nest();
         Config::nest();
 
-		Phockito::include_hamcrest(true);
+		\Phockito::include_hamcrest(true);
 
         // Setup a dummy Sentry DSN so our errors are not actually sent anywhere
         Config::inst()->update(
