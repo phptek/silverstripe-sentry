@@ -164,7 +164,23 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
             'timestamp' => strtotime($event['timestamp']),                  // From Zend_Log::log()
             'extra'     => isset($event['extra']) ? $event['extra'] : []    // From _config.php (Optional)
         ];
-        $trace = \SS_Backtrace::filter_backtrace(debug_backtrace(), ['SentryLogWriter->_write']);
+        
+        // Use given context if available
+        if (!empty($event['message']['errcontext'])) {
+            $bt = $event['message']['errcontext'];
+            // Push current line into context
+            array_unshift($bt, [
+                'file' => $event['message']['errfile'],
+                'line' => $event['message']['errline'],
+                'function' => '',
+                'class' => '',
+                'type' => '',
+                'args' => [],
+            ]);
+        } else {
+            $bt = debug_backtrace();
+        }
+        $trace = \SS_Backtrace::filter_backtrace($bt, ['SentryLogWriter->_write', 'phptek\Sentry\SentryLogWriter->_write']);
         
         $this->client->send($message, [], $data, $trace);
     }
