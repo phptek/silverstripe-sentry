@@ -51,8 +51,7 @@ class RavenClientTest extends \SapphireTest
         // Invoke SentryLogWriter::_write()
         \SS_Log::log('You have 30 seconds to reach minimum safe distance.', \SS_Log::ERR);
 
-        $ravenSDKClient = $writer->getClient()->getSDK();
-        $tagsThatWereSet = $ravenSDKClient->context->tags;
+        $tagsThatWereSet = $writer->getClient()->getData()['tags'];
 
         $this->assertArrayHasKey('Request-Method', $tagsThatWereSet);
         $this->assertArrayHasKey('Request-Type', $tagsThatWereSet);
@@ -77,8 +76,7 @@ class RavenClientTest extends \SapphireTest
         // Setup the "fixture data" for this test
         $this->logInWithPermission('admin');
 
-        $ravenSDKClient = $writer->getClient()->getSDK();
-        $userDataThatWasSet = $ravenSDKClient->context->user;
+        $userDataThatWasSet = $writer->getClient()->getData()['user'];
 
         // Cannot get Member data at by default at initialisation time
         $this->assertEquals('Unavailable', $userDataThatWasSet['ID']);
@@ -109,9 +107,8 @@ class RavenClientTest extends \SapphireTest
         // Invoke SentryLogWriter::_write()
         \SS_Log::log('You have 10 seconds to comply.', \SS_Log::ERR);
 
-        $ravenSDKClient = $writer->getClient()->getSDK();
-        $envThatWasSet = $ravenSDKClient->getEnvironment();
-        $xtraThatWasSet = $ravenSDKClient->context->extra;
+        $envThatWasSet = $writer->getClient()->getData()['env'];
+        $xtraThatWasSet = $writer->getClient()->getData()['extra'];
 
         $this->assertEquals('live', $envThatWasSet);
         $this->assertArrayHasKey('foo', $xtraThatWasSet);

@@ -100,6 +100,21 @@ class RavenClient extends SentryClientAdaptor
     }
     
     /**
+     * Simple accessor for data set to / on the client.
+     * 
+     * @return array
+     */
+    public function getData()
+    {
+        return [
+            'env'   => $this->client->getEnvironment(),
+            'tags'  => $this->client->context->tags,
+            'user'  => $this->client->context->user,
+            'extra' => $this->client->context->extra,
+        ];
+    }
+    
+    /**
      * @inheritdoc
      */
     public function getLevel($level)
