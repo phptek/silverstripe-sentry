@@ -164,22 +164,22 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         // Collect user data when sending because session is not initialized in _config.php
         $this->client->setData('user', $this->defaultUserData(\Member::currentUser()));
 
+        $bt = debug_backtrace();
+        
         // Use given context if available
         if (!empty($event['message']['errcontext'])) {
             $bt = $event['message']['errcontext'];
-            
-            // Push current line into context
-            array_unshift($bt, [
-                'file' => $event['message']['errfile'],
-                'line' => $event['message']['errline'],
-                'function' => '',
-                'class' => '',
-                'type' => '',
-                'args' => [],
-            ]);
-        } else {
-            $bt = debug_backtrace();
         }
+            
+        // Push current line into context
+        array_unshift($bt, [
+            'file' => $event['message']['errfile'],
+            'line' => $event['message']['errline'],
+            'function' => '',
+            'class' => '',
+            'type' => '',
+            'args' => [],
+        ]);
         
         $trace = \SS_Backtrace::filter_backtrace($bt, [
             'SentryLogWriter->_write', 
