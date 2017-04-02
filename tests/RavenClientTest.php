@@ -71,23 +71,18 @@ class RavenClientTest extends \SapphireTest
      */
     public function testdefaultUserDataAvailable()
     {
-        // Setup the "fixture data" for this test
-        $_SERVER['REMOTE_ADDR'] = '192.168.1.2';
-        $this->logInWithPermission('admin');
-
         $writer = SentryLogWriter::factory();
         \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
+        
+        // Setup the "fixture data" for this test
+        $this->logInWithPermission('admin');
 
         $ravenSDKClient = $writer->getClient()->getSDK();
         $userDataThatWasSet = $ravenSDKClient->context->user;
 
-        $this->assertArrayHasKey('IP-Address', $userDataThatWasSet);
-        $this->assertArrayHasKey('ID', $userDataThatWasSet);
-        $this->assertArrayHasKey('Email', $userDataThatWasSet);
-
-        $this->assertEquals('192.168.1.2', $userDataThatWasSet['IP-Address']);
-        $this->assertEquals(1, $userDataThatWasSet['ID']);
-        $this->assertEquals('admin@example.org', $userDataThatWasSet['Email']);
+        // Cannot get Member data at by default at initialisation time
+        $this->assertEquals('Unavailable', $userDataThatWasSet['ID']);
+        $this->assertEquals('Unavailable', $userDataThatWasSet['Email']);
 
         // Cleanup
         \SS_Log::remove_writer($writer);

@@ -167,6 +167,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         // Use given context if available
         if (!empty($event['message']['errcontext'])) {
             $bt = $event['message']['errcontext'];
+            
             // Push current line into context
             array_unshift($bt, [
                 'file' => $event['message']['errfile'],
@@ -179,7 +180,11 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
         } else {
             $bt = debug_backtrace();
         }
-        $trace = \SS_Backtrace::filter_backtrace($bt, ['SentryLogWriter->_write', 'phptek\Sentry\SentryLogWriter->_write']);
+        
+        $trace = \SS_Backtrace::filter_backtrace($bt, [
+            'SentryLogWriter->_write', 
+            'phptek\Sentry\SentryLogWriter->_write'
+        ]);
 
         $this->client->send($message, [], $data, $trace);
     }
