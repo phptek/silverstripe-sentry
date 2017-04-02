@@ -10,6 +10,9 @@
             "homepage": "http://theruss.com/"
         }
     ],
+    "replace": {
+        "silverstripe/sentry": "*"
+    },
     "require": {
         "php": ">=5.3.3,<7",
         "sentry/sentry": "1.6.2",
