@@ -14,8 +14,8 @@
         "silverstripe/sentry": "*"
     },
     "require": {
-        "php": ">=5.3.3,<7",
-        "sentry/sentry": "1.6.2",
+        "php": "^5.3|^7.0",
+        "sentry/sentry": "^1.7",
         "silverstripe/framework": ">=3.1.0,<4"
     },
     "require-dev": {
