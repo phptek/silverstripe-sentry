@@ -9,9 +9,7 @@ php:
   - 5.5
   - 5.6
   - 7.0
-
-env:
-  - DB=MYSQL CORE_RELEASE=3.2
+  - 7.1
 
 matrix:
   include:
@@ -26,6 +24,8 @@ matrix:
     - php: 5.6
       env: DB=MYSQL CORE_RELEASE=3.5
     - php: 7.0
+      env: DB=MYSQL CORE_RELEASE=3.6
+    - php: 7.1
       env: DB=MYSQL CORE_RELEASE=3.6
 
 before_script:
