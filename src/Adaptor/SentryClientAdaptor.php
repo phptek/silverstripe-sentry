@@ -7,7 +7,9 @@
  * @package phptek/sentry
  */
 
-namespace phptek\Sentry\Adaptor;
+namespace PhpTek\Sentry\Adaptor;
+
+use SilverStripe\Core\Config\Config;
 
 /**
  * The SentryClientAdaptor provides the base-class functionality for subclasses
@@ -16,16 +18,16 @@ namespace phptek\Sentry\Adaptor;
  * used at any point.
  */
 
-abstract class SentryClientAdaptor extends \Object
+abstract class SentryClientAdaptor
 {
 
     /**
-     * @param mixed $opt
+     * @param  mixed $opt
      * @return mixed
-     */
+     */ 
     protected function getOpts($opt)
     {
-        $opts = $this->config()->opts;
+        $opts = Config::inst()->get(__CLASS__, 'opts');
 
         if (!is_null($opts) && !empty($opts[$opt])) {
             return $opts[$opt];

@@ -9,4 +9,3 @@ logic in Raven's Raven_CurlHandler class.
 * [breadcrumbs](https://docs.sentry.io/learn/breadcrumbs/)
 * Add feature-checking routine for features against the instance of Sentry being called
 * Add release data ([see here](https://docs.sentry.io/clients/php/config/))
-* SilverStripe 4 support via the Monolog RavenHandler

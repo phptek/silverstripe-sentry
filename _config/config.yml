@@ -1,21 +1,17 @@
 ---
-Name: silverstripe-sentry
-After:
-  - 'framework/*'
-  - 'cms/*'
+Name: sentry
 ---
 
-phptek\Sentry\SentryLogWriter:
+PhpTek\Sentry\Log\SentryLogger:
   dependencies:
-    client: %$SentryClientAdaptor
+    client: %$PhpTek\Sentry\Adaptor\RavenClient
     
-phptek\Sentry\Adaptor\RavenClient:
+PhpTek\Sentry\Adaptor\RavenClient:
   # Installs all available PHP error handlers
   # Untested when set to true
   install: false
 
-Injector:
-  SentryLogWriter:
-    class: phptek\Sentry\SentryLogWriter
-  SentryClientAdaptor:
-    class: phptek\Sentry\Adaptor\RavenClient
+SilverStripe\Core\Injector\Injector:
+  Psr\Log\LoggerInterface:
+    calls:
+      - [ pushHandler, [ %$PhpTek\Sentry\Handler\SentryMonologHandler ]]

@@ -13,6 +13,13 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 ## Requirements
 
+### SilverStripe 4
+
+ * PHP5.6+, <7.2
+ * SilverStripe v4.0.0-rc1+
+
+### SilverStripe 3
+
  * PHP5.4+
  * SilverStripe v3.1.0+ < 4.0
 
@@ -20,9 +27,18 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 Add the Composer package as a dependency to your project:
 
-	composer require phptek/sentry: dev-master
+	composer require phptek/sentry: 1.0
 
 Configure your application or site with the Sentry DSN into your project's YML config:
+
+### SilverStripe 4
+
+    PhpTek\Sentry\Adaptor\SentryClientAdaptor:
+      opts:
+        # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
+        dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
+
+### SilverStripe 3
 
     phptek\Sentry\Adaptor\SentryClientAdaptor:
       opts:
@@ -33,7 +49,13 @@ Configure your application or site with the Sentry DSN into your project's YML c
 
 Sentry is normally setup once in your project's `_config.php` as follows, but see the [usage docs](docs/usage.md) for more detail and options.
 
+### SilverStripe 3
+
     SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
+
+### SilverStripe 4
+
+    SS_Log::add_writer(\PhpTek\Sentry\Log\SentryLogWriter::factory(), SS_Log::ERR, '<=');
 
 ## TODO
 
