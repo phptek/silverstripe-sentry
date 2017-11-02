@@ -7,9 +7,11 @@
  * @package phptek/sentry
  */
 
-namespace phptek\Sentry;
+namespace PhpTek\Sentry\Log;
 
-require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
+use SilverStripe\Control\Director;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Security\Member;
 
 /**
  * The SentryLogWriter class simply acts as a bridge between the configured Sentry 
@@ -20,7 +22,7 @@ require_once THIRDPARTY_PATH . '/Zend/Log/Writer/Abstract.php';
  *    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), '<=');
  */
 
-class SentryLogWriter extends \Zend_Log_Writer_Abstract
+class SentryLogger
 {
     
     /**
@@ -36,35 +38,31 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      * 
      * @param  array $config    An array of optional additional configuration for
      *                          passing custom information to Sentry. See the README for more detail.
-     * @return SentryLogWriter
+     * @return SentryLogger
      */
     public static function factory($config = [])
     {
         $env = isset($config['env']) ? $config['env'] : null;
         $tags = isset($config['tags']) ? $config['tags'] : [];
         $extra = isset($config['extra']) ? $config['extra'] : [];
-        $writer = \Injector::inst()->get('SentryLogWriter');
+        $logger = Injector::inst()->create(__CLASS__);
 
         // Set default environment
         if (is_null($env)) {
-            $env = $writer->defaultEnv();
+            $env = $logger->defaultEnv();
         }
 
-        // Set all available user-data
-        $userData = $writer->defaultUserData();
-
         // Set any available tags available in SS config
-        $tags = array_merge($writer->defaultTags(), $tags);
+        $tags = array_merge($logger->defaultTags(), $tags);
 
         // Set any avalable additional (extra) data
-        $extra = array_merge($writer->defaultExtra(), $extra);
+        $extra = array_merge($logger->defaultExtra(), $extra);
 
-        $writer->client->setData('env', $env);
-        $writer->client->setData('user', $userData);
-        $writer->client->setData('tags', $tags);
-        $writer->client->setData('extra', $extra);
-
-        return $writer;
+        $logger->client->setData('env', $env);
+        $logger->client->setData('tags', $tags);
+        $logger->client->setData('extra', $extra);
+        
+        return $logger;
     }
 
     /**
@@ -85,23 +83,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
      */
     public function defaultEnv()
     {
-        return \Director::get_environment_type();
-    }
-    
-    /**
-     * Returns a default set of additional data specific to the user's part in
-     * the request.
-     * 
-     * @param  Member $member
-     * @return array
-     */
-    public function defaultUserData(\Member $member = null)
-    {
-        return [
-            'IP-Address'    => $this->getIP(),
-            'ID'            => $member ? $member->getField('ID') : self::SLW_NOOP,
-            'Email'         => $member ? $member->getField('Email') : self::SLW_NOOP,
-        ];
+        return Director::get_environment_type();
     }
     
     /**
@@ -145,51 +127,6 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     }
     
     /**
-     * _write() forms the entry point into the physical sending of the error. The 
-     * sending itself is done by the current adaptor's `send()` method.
-     * 
-     * @param  array $event An array of data that is created in, and arrives here
-     *                      via {@link SS_Log::log()} and {@link Zend_Log::log}.
-     * @return void
-     */
-    protected function _write($event)
-    {
-        $message = $event['message']['errstr'];                             // From SS_Log::log()
-        // The complete compliment of these data come via the Raven_Client::xxx_context() methods
-        $data = [
-            'timestamp' => strtotime($event['timestamp']),                  // From Zend_Log::log()
-            'extra'     => isset($event['extra']) ? $event['extra'] : []    // From _config.php (Optional)
-        ];
-
-        // Collect user data when sending because session is not initialized in _config.php
-        $this->client->setData('user', $this->defaultUserData(\Member::currentUser()));
-
-        $bt = debug_backtrace();
-        
-        // Use given context if available
-        if (!empty($event['message']['errcontext'])) {
-            $bt = $event['message']['errcontext'];
-        }
-            
-        // Push current line into context
-        array_unshift($bt, [
-            'file' => $event['message']['errfile'],
-            'line' => $event['message']['errline'],
-            'function' => '',
-            'class' => '',
-            'type' => '',
-            'args' => [],
-        ]);
-        
-        $trace = \SS_Backtrace::filter_backtrace($bt, [
-            'SentryLogWriter->_write', 
-            'phptek\Sentry\SentryLogWriter->_write'
-        ]);
-
-        $this->client->send($message, [], $data, $trace);
-    }
-    
-    /**
      * Return the version of $pkg taken from composer.lock.
      * 
      * @param  string $pkg e.g. "silverstripe/framework"
@@ -215,22 +152,6 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     }
     
     /**
-     * Return the IP address of the relevant request.
-     * 
-     * @return string
-     */
-    public function getIP()
-    {
-        $req = \Injector::inst()->create('SS_HTTPRequest', $this->getReqMethod(), '');
-        
-        if ($ip = $req->getIP()) {
-            return $ip;
-        }
-        
-        return self::SLW_NOOP;
-    }
-    
-    /**
      * What sort of request is this? (A harder question to answer than you might
      * think: http://stackoverflow.com/questions/6275363/what-is-the-correct-terminology-for-a-non-ajax-request)
      * 
@@ -239,7 +160,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     public function getRequestType()
     {
         $isCLI = $this->getSAPI() !== 'cli';
-        $isAjax = \Director::is_ajax();
+        $isAjax = Director::is_ajax();
 
         return $isCLI && $isAjax ? 'AJAX' : 'Non-Ajax';
     }
@@ -273,7 +194,7 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     }
     
     /**
-     * Basic reuqest method check and return.
+     * Basic request method check and return.
      * 
      * @return string
      */
@@ -295,5 +216,47 @@ class SentryLogWriter extends \Zend_Log_Writer_Abstract
     {
         return php_sapi_name();
     }
+    
+ 	/**
+	 * Returns the client IP address which originated this request.
+     * Lifted and modified from SilverStripe 3's SS_HTTPRequest.
+	 *
+	 * @return string
+	 */
+	public function getIP()
+    {
+		$headerOverrideIP = null;
+        
+		if(defined('TRUSTED_PROXY')) {
+			$headers = (defined('SS_TRUSTED_PROXY_IP_HEADER')) ? 
+                array(SS_TRUSTED_PROXY_IP_HEADER) : 
+                null;
+            
+			if(!$headers) {
+				// Backwards compatible defaults
+				$headers = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR'];
+			}
+            
+			foreach($headers as $header) {
+				if(!empty($_SERVER[$header])) {
+					$headerOverrideIP = $_SERVER[$header];
+                    
+					break;
+				}
+			}
+		}
+        
+        $proxy = Injector::inst()->create('SilverStripe\Control\Middleware\TrustedProxyMiddleware');
+
+		if ($headerOverrideIP) {
+			return $proxy->getIPFromHeaderValue($headerOverrideIP);
+		}
+        
+        if (isset($_SERVER['REMOTE_ADDR'])) {
+			return $_SERVER['REMOTE_ADDR'];
+		}
+        
+        return '';
+	}
     
 }

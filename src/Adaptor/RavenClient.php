@@ -7,10 +7,11 @@
  * @package phptek/sentry
  */
 
-namespace phptek\Sentry\Adaptor;
+namespace PhpTek\Sentry\Adaptor;
 
-use phptek\Sentry\Adaptor\SentryClientAdaptor;
-use phptek\Sentry\Exception\SentryLogWriterException;
+use PhpTek\Sentry\Adaptor\SentryClientAdaptor;
+use phpTek\Sentry\Exception\SentryLogWriterException;
+use SilverStripe\Core\Config\Config;
 
 /**
  * The RavenClient class simply acts as a bridge between the Raven PHP SDK and
@@ -53,14 +54,14 @@ class RavenClient extends SentryClientAdaptor
     public function __construct()
     {        
         if (!$dsn = $this->getOpts('dsn')) {
-            $msg = sprintf("%s requires a DSN string to be set in config.", __CLASS__);
+            $msg = sprintf("Class: %s requires a DSN string to be set in config.", __CLASS__);
             throw new SentryLogWriterException($msg);
         }
         
         $this->client = new \Raven_Client($dsn);
         
         // Installs all available PHP error handlers when set
-        if ($this->config()->install === true) {
+        if (Config::inst()->get(__CLASS__, 'install') === true) {
             $this->client->install();
         }
     }
@@ -94,7 +95,7 @@ class RavenClient extends SentryClientAdaptor
             $this->client->extra_context($data);
             break;
         default:
-            $msg = sprintf('Unknown field %s passed to %s.', $field, __FUNCTION__);
+            $msg = sprintf('Unknown field "%s" passed to %s().', $field, __FUNCTION__);
             throw new SentryLogWriterException($msg);
         }
     }

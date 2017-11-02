@@ -7,7 +7,7 @@
  * @package phptek/sentry
  */
 
-namespace phptek\Sentry\Exception;
+namespace PhpTek\Sentry\Exception;
 
 /**
  * The module has its own exception subclasses to easily distinguish between project

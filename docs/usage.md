@@ -1,18 +1,29 @@
 # Usage
 
-In your project's `_config.php`, set one of the following, depending on your
-use-case.
+In your project's `_config.php`, set one of the following, depending on your use-case.
 
 ## Basic
 
+### SilverStripe 3
+
     SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
+
+### SilverStripe 4
+
+Nothing to do, the logger is registered via YML config as a Monolog Handler.
 
 ## Set an environment
 
 If an environment is not specified, the default is to use the return value of `Director::get_environment_type()`.
 
+### SilverStripe 3
+
     $config = ['env' => 'live'];
     SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
+
+### SilverStripe 4
+
+TBC
 
 ## Set tags
 
@@ -23,6 +34,8 @@ Note: It makes no sense to send hugely varying data in a tag. If it's unlikely t
 wish to send, is ever going to be repeated, don't send it as a tag. Look at using the "Extras" feature (described below)
 instead.
 
+### SilverStripe 3
+
     $config = [
         'env' => 'live',
         'tags' = [
@@ -31,11 +44,17 @@ instead.
     ];
     SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
 
+### SilverStripe 4
+
+TBC
+
 ## Set extras
 
 Once a message is selected within the Sentry UI, additional, arbitrary data can be displayed 
 to further help with debugging. You can opt to send this as a consistent "baked-in" set of values
 from within `_config.php` or at runtime, via passing the optional 3rd parameter to `SS_Log::log()`.
+
+### SilverStripe 3
 
 ### Via _config.php
 
@@ -63,3 +82,7 @@ to the 3rd parameter of `SS_Log::log()` who's first key is "extra" and who's val
 comprising the data you wish to send:
 
     SS_Log::log('Help, my curry is too hot. I only asked for mild.', SS_Log::ERR, ['extra' => ['toilet' => 'now']]);
+
+### SilverStripe 4
+
+TBC

@@ -1,6 +1,6 @@
 {
     "name": "phptek/sentry",
-    "type": "silverstripe-module",
+    "type": "silverstripe-vendormodule",
     "license": "BSD",
     "description": "Sentry.io integration for SilverStripe. Binds Sentry.io to SilverStripe's error & exception handling subsystem.",
     "keywords": ["silverstripe", "sentry", "logging", "logs", "log", "raven", "exception", "error"],
@@ -14,9 +14,9 @@
         "silverstripe/sentry": "*"
     },
     "require": {
-        "php": "^5.4|<7.2",
-        "sentry/sentry": "^1.7",
-        "silverstripe/framework": ">=3.1.0,<4"
+        "php": ">=5.6|<7.2",
+        "sentry/sentry": "^1.8",
+        "silverstripe/framework": "4.0.x-dev as 4.0.0"
     },
     "require-dev": {
         "hafriedlander/silverstripe-phockito": "dev-master"
