@@ -7,7 +7,7 @@
  * @package phptek/sentry
  */
 
-namespace PhpTek\Sentry\Handler;
+namespace PHPTek\Sentry\Handler;
 
 use Monolog\Handler\RavenHandler;
 use Monolog\Logger;
@@ -22,12 +22,15 @@ use PhpTek\Sentry\Log\SentryLogger;
 class SentryMonologHandler extends RavenHandler
 {    
     /**
+     * @param  int   $level
+     * @param  bool  $bubble
+     * @param  array $extras Extra parameters that will become "tags" in Sentry.
      * @return void
      */
-    public function __construct($level = Logger::DEBUG, $bubble = true)
+    public function __construct($level = Logger::DEBUG, $bubble = true, $extras = [])
     {        
         // Returns an instance of {@link SentryLogger}
-        $logger = SentryLogger::factory();
+        $logger = SentryLogger::factory($extras);
         $client = $logger->client->getSDK();
         
         parent::__construct($client, $level, $bubble);

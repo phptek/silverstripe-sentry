@@ -22,7 +22,6 @@ before_script:
 
 # Install composer dependencies
   - export PATH=~/.composer/vendor/bin:$PATH
-  - composer validate
   - composer install --prefer-dist
   - composer require --prefer-dist --no-update symfony/config:^3.2 silverstripe/framework:4.0.x-dev silverstripe/config:1.0.x-dev --prefer-dist
   - composer update

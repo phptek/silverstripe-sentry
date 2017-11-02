@@ -7,14 +7,14 @@
  * @package phptek/sentry
  */
 
-require_once THIRDPARTY_PATH . '/Zend/Log/Formatter/Interface.php';
-
-use phptek\Sentry\SentryLogWriter;
+use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Injector\Injector;
 
 /**
- * Excercises SentryLogWriter.
+ * Exercises SentryLogger.
  */
-class SentryLogWriterTest extends \SapphireTest
+class SentryLogWriterTest extends SapphireTest
 {
     /**
      * Setup test-specific context
@@ -25,13 +25,13 @@ class SentryLogWriterTest extends \SapphireTest
 
         // No idea why these need to be explicitly set. Although the suite runs,
         // we always see nest() / unnest() errors from phpunit..
-        \Injector::nest();
-        \Config::nest();
+        Injector::nest();
+        Config::nest();
 
 		\Phockito::include_hamcrest(true);
 
         // Setup a dummy Sentry DSN so our errors are not actually sent anywhere
-        \Config::inst()->update(
+        Config::inst()->update(
             'phptek\Sentry\Adaptor\SentryClientAdaptor',
             'opts',
             ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
@@ -45,13 +45,13 @@ class SentryLogWriterTest extends \SapphireTest
      */
     public function testWriteIsCalled()
     {
-        // Mock the SentryLogWriter
-        $spy = \Phockito::spy('phptek\Sentry\SentryLogWriter');
+        // Mock the SentryLogger
+        $spy = \Phockito::spy('PHPTek\Sentry\Log\SentryLogger');
 
         // Register it
         \SS_Log::add_writer($spy, \SS_Log::ERR, '<=');
 
-        // Invoke SentryLogWriter::_write()
+        // Indirectly invoke SentryLogWriter::_write()
         \SS_Log::log('You have one minute to reach minimum safe distance.', \SS_Log::ERR);
 
         // Verificate

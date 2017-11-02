@@ -7,12 +7,18 @@
  * @package phptek/sentry
  */
 
-use phptek\Sentry\SentryLogWriter;
+namespace PHPTek\Sentry\Test;
+
+use PHPTek\Sentry\Log\SentryLogger;
+use PHPTek\Sentry\Handler\SentryMonologHandler;
+use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Core\Config\Config;
+use Monolog\Logger;
 
 /**
- * Excercises RavenClient.
+ * Exercises RavenClient.
  */
-class RavenClientTest extends \SapphireTest
+class RavenClientTest extends SapphireTest
 {
 
     /**
@@ -32,7 +38,7 @@ class RavenClientTest extends \SapphireTest
         parent::setUpOnce();
 
         Config::inst()->update(
-            'phptek\Sentry\Adaptor\SentryClientAdaptor',
+            'PHPTek\Sentry\Adaptor\SentryClientAdaptor',
             'opts',
              ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
         );
@@ -44,22 +50,19 @@ class RavenClientTest extends \SapphireTest
      * @return void
      */
     public function testDefaultTagsAvailable()
-    {
-        $writer = SentryLogWriter::factory();
-        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
+    {        
+        $logger = new Logger('error-log');
+        $logger->pushHandler(new SentryMonologHandler());
 
-        // Invoke SentryLogWriter::_write()
-        \SS_Log::log('You have 30 seconds to reach minimum safe distance.', \SS_Log::ERR);
+        // Indirectly invoke SentryMonologHandler::write() via user_error()
+        user_error('You have 30 seconds to reach minimum safe distance.');
 
-        $tagsThatWereSet = $writer->getClient()->getData()['tags'];
+        $tagsThatWereSet = $logger->getClient()->getData()['tags'];
 
         $this->assertArrayHasKey('Request-Method', $tagsThatWereSet);
         $this->assertArrayHasKey('Request-Type', $tagsThatWereSet);
         $this->assertArrayHasKey('SAPI', $tagsThatWereSet);
         $this->assertArrayHasKey('SS-Version', $tagsThatWereSet);
-
-        // Cleanup
-        \SS_Log::remove_writer($writer);
     }
 
     /**
@@ -70,20 +73,17 @@ class RavenClientTest extends \SapphireTest
      */
     public function testdefaultUserDataAvailable()
     {
-        $writer = SentryLogWriter::factory();
-        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
+        $logger = new Logger('error-log');
+        $logger->pushHandler(new SentryMonologHandler());
         
         // Setup the "fixture data" for this test
         $this->logInWithPermission('admin');
 
-        $userDataThatWasSet = $writer->getClient()->getData()['user'];
+        $userDataThatWasSet = $logger->getClient()->getData()['user'];
 
         // Cannot get Member data at by default at initialisation time
         $this->assertEquals('Unavailable', $userDataThatWasSet['ID']);
         $this->assertEquals('Unavailable', $userDataThatWasSet['Email']);
-
-        // Cleanup
-        \SS_Log::remove_writer($writer);
     }
     
     /**
@@ -101,21 +101,21 @@ class RavenClientTest extends \SapphireTest
             ],
             'env' => 'live'
         ];
-        $writer = SentryLogWriter::factory($fixture);
-        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
+        $logger = new Logger('error-log');
+        $logger->pushHandler(new SentryMonologHandler(100, true, $fixture));
 
         // Invoke SentryLogWriter::_write()
         \SS_Log::log('You have 10 seconds to comply.', \SS_Log::ERR);
 
-        $envThatWasSet = $writer->getClient()->getData()['env'];
-        $xtraThatWasSet = $writer->getClient()->getData()['extra'];
+        $envThatWasSet = $logger->getClient()->getData()['env'];
+        $xtraThatWasSet = $logger->getClient()->getData()['extra'];
 
         $this->assertEquals('live', $envThatWasSet);
         $this->assertArrayHasKey('foo', $xtraThatWasSet);
         $this->assertContains('bar', $xtraThatWasSet['foo']);
 
         // Cleanup
-        \SS_Log::remove_writer($writer);
+        \SS_Log::remove_writer($logger);
     }
 
 }
