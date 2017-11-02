@@ -16,18 +16,24 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 ### SilverStripe 4
 
  * PHP5.6+, <7.2
- * SilverStripe v4.0.0-rc1+
+ * SilverStripe v4.0.0+
 
 ### SilverStripe 3
 
- * PHP5.4+
- * SilverStripe v3.1.0+ < 4.0
+ * PHP5.4+, <7.0
+ * SilverStripe v3.1.0+, < 4.0
 
 ## Setup
 
 Add the Composer package as a dependency to your project:
 
-	composer require phptek/sentry: 1.0
+### SilverStripe 3
+
+    composer require phptek/sentry: 1.0
+
+### SilverStripe 4
+
+    composer require phptek/sentry: 2.0
 
 Configure your application or site with the Sentry DSN into your project's YML config:
 
@@ -47,15 +53,12 @@ Configure your application or site with the Sentry DSN into your project's YML c
 
 ## Usage
 
-Sentry is normally setup once in your project's `_config.php` as follows, but see the [usage docs](docs/usage.md) for more detail and options.
+Sentry is normally setup once in your project's YML config or `_config.php` file. See the [usage docs](docs/usage.md) for details and options.
 
-### SilverStripe 3
+## Known Issues
 
-    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
-
-### SilverStripe 4
-
-    SS_Log::add_writer(\PhpTek\Sentry\Log\SentryLogWriter::factory(), SS_Log::ERR, '<=');
+The stacktrace does not show in SilverStripe 4. We're using the `Monolog` package's `RavenHandler` which isn't as fully functional.
+There is a PR in that fixes the problem here: https://github.com/Seldaek/monolog/pull/1075.
 
 ## TODO
 

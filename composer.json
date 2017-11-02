@@ -16,7 +16,7 @@
     "require": {
         "php": ">=5.6|<7.2",
         "sentry/sentry": "^1.8",
-        "silverstripe/framework": "4.0.x-dev as 4.0.0"
+        "silverstripe/framework": "4.0.0"
     },
     "require-dev": {
         "hafriedlander/silverstripe-phockito": "dev-master"

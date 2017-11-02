@@ -9,11 +9,11 @@
 
 namespace PhpTek\Sentry\Handler;
 
-use Monolog\Handler\RavenHandler;
-use Monolog\Logger;
-use SilverStripe\Dev\Backtrace;
-use SilverStripe\Security\Member;
-use PhpTek\Sentry\Log\SentryLogger;
+use Monolog\Handler\RavenHandler,
+    Monolog\Logger,
+    SilverStripe\Dev\Backtrace,
+    SilverStripe\Security\Member,
+    PhpTek\Sentry\Log\SentryLogger;
 
 /**
  * Monolog Handler for Sentry via Raven
@@ -22,15 +22,33 @@ use PhpTek\Sentry\Log\SentryLogger;
 class SentryMonologHandler extends RavenHandler
 {    
     /**
+     * @var SentryClientAdaptor
+     */
+    protected $client;
+
+    /**
+     * @param  int   $level
+     * @param  bool  $bubble
+     * @param  array $extras Extra parameters that will become "tags" in Sentry.
      * @return void
      */
-    public function __construct($level = Logger::DEBUG, $bubble = true)
+    public function __construct($level = Logger::DEBUG, $bubble = true, $extras = [])
     {        
         // Returns an instance of {@link SentryLogger}
-        $logger = SentryLogger::factory();
-        $client = $logger->client->getSDK();
+        $logger = SentryLogger::factory($extras);
+        $sdk = $logger->client->getSDK();
+        $this->client = $logger->client;
+        $this->client->setData('user', $this->getUserData(null, $logger));
         
-        parent::__construct($client, $level, $bubble);
+        parent::__construct($sdk, $level, $bubble);
+    }
+    
+    /**
+     * @return SentryClientAdaptor
+     */
+    public function getClient()
+    {
+        return $this->client;
     }
     
     /**
@@ -52,22 +70,26 @@ class SentryMonologHandler extends RavenHandler
      * @return void
      */
     protected function write(array $record)
-    {
-        $logger = SentryLogger::factory();
-        $logger->client->setData('user', $this->getUserData(null, $logger));
-        
+    {   
         // The complete compliment of these data come via the Raven_Client::xxx_context() methods
+        // Monolog does not make use of the 'extra' parameter, so we munge ours into
+        // its 'context' param and use that
+        if (!$extra = !empty($record['extra']) ? $record['extra'] : []) {
+            $extra = !empty($record['context']) ? $record['context'] : [];
+        }
+
         $record = [
             'level'      => $record['level'],
             'formatted'  => $record['formatted'],
             'channel'    => $record['channel'],
             'timestamp'  => $record['datetime']->getTimestamp(),
-            'extra'      => !empty($record['extra']) ? $record['extra'] : [],
+            'extra'      => $extra,
             'stacktrace' => $this->backtrace($record),
             'stack'      => true,
         ];
         
-        // Will use one of RavenHandler::captureException() or RavenHandler::captureMessage()
+        // write() calls one of RavenHandler::captureException() or RavenHandler::captureMessage()
+        // depending on 
         parent::write($record);
     }
     

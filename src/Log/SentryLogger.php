@@ -9,9 +9,8 @@
 
 namespace PhpTek\Sentry\Log;
 
-use SilverStripe\Control\Director;
-use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Security\Member;
+use SilverStripe\Control\Director,
+    SilverStripe\Core\Injector\Injector;
 
 /**
  * The SentryLogWriter class simply acts as a bridge between the configured Sentry 
@@ -37,7 +36,8 @@ class SentryLogger
      * A static constructor as per {@link Zend_Log_FactoryInterface}.
      * 
      * @param  array $config    An array of optional additional configuration for
-     *                          passing custom information to Sentry. See the README for more detail.
+     *                          passing custom information to Sentry. See the README
+     *                          for more detail.
      * @return SentryLogger
      */
     public static function factory($config = [])
@@ -55,7 +55,7 @@ class SentryLogger
         // Set any available tags available in SS config
         $tags = array_merge($logger->defaultTags(), $tags);
 
-        // Set any avalable additional (extra) data
+        // Set any available additional (extra) data
         $extra = array_merge($logger->defaultExtra(), $extra);
 
         $logger->client->setData('env', $env);

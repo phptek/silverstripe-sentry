@@ -7,12 +7,15 @@
  * @package phptek/sentry
  */
 
-use phptek\Sentry\SentryLogWriter;
+use PhpTek\Sentry\Handler\SentryMonologHandler,
+    SilverStripe\Dev\SapphireTest,
+    SilverStripe\Core\Config\Config,
+    Monolog\Logger;
 
 /**
- * Excercises RavenClient.
+ * Exercises RavenClient.
  */
-class RavenClientTest extends \SapphireTest
+class RavenClientTest extends SapphireTest
 {
 
     /**
@@ -27,12 +30,12 @@ class RavenClientTest extends \SapphireTest
      * Setup a dummy Sentry DSN so our errors are not actually sent
      * anywhere
      */
-    public function setUpOnce()
+    public static function setUpBeforeClass()
     {
-        parent::setUpOnce();
+        parent::setUpBeforeClass();
 
-        Config::inst()->update(
-            'phptek\Sentry\Adaptor\SentryClientAdaptor',
+        Config::modify()->set(
+            'PhpTek\Sentry\Adaptor\SentryClientAdaptor',
             'opts',
              ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
         );
@@ -44,22 +47,16 @@ class RavenClientTest extends \SapphireTest
      * @return void
      */
     public function testDefaultTagsAvailable()
-    {
-        $writer = SentryLogWriter::factory();
-        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
-
-        // Invoke SentryLogWriter::_write()
-        \SS_Log::log('You have 30 seconds to reach minimum safe distance.', \SS_Log::ERR);
-
-        $tagsThatWereSet = $writer->getClient()->getData()['tags'];
+    {        
+        $logger = new Logger('error-log');
+        $logger->pushHandler(new SentryMonologHandler());        
+        $handler = $logger->getHandlers()[0];
+        $tagsThatWereSet = $handler->getClient()->getData()['tags'];
 
         $this->assertArrayHasKey('Request-Method', $tagsThatWereSet);
         $this->assertArrayHasKey('Request-Type', $tagsThatWereSet);
         $this->assertArrayHasKey('SAPI', $tagsThatWereSet);
         $this->assertArrayHasKey('SS-Version', $tagsThatWereSet);
-
-        // Cleanup
-        \SS_Log::remove_writer($writer);
     }
 
     /**
@@ -67,23 +64,22 @@ class RavenClientTest extends \SapphireTest
      * reporting process.
      *
      * @return void
+     * @todo Need to mock a SentryMonologHandler
      */
     public function testdefaultUserDataAvailable()
     {
-        $writer = SentryLogWriter::factory();
-        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
+        $logger = new Logger('error-log');
+        $logger->pushHandler(new SentryMonologHandler());
+        $handler = $logger->getHandlers()[0];
         
         // Setup the "fixture data" for this test
         $this->logInWithPermission('admin');
-
-        $userDataThatWasSet = $writer->getClient()->getData()['user'];
+        
+        $userDataThatWasSet = $handler->getClient()->getData()['user'];
 
         // Cannot get Member data at by default at initialisation time
-        $this->assertEquals('Unavailable', $userDataThatWasSet['ID']);
-        $this->assertEquals('Unavailable', $userDataThatWasSet['Email']);
-
-        // Cleanup
-        \SS_Log::remove_writer($writer);
+        $this->assertEquals(1, $userDataThatWasSet['ID']);
+        $this->assertEquals('ADMIN@example.org', $userDataThatWasSet['Email']);
     }
     
     /**
@@ -101,21 +97,15 @@ class RavenClientTest extends \SapphireTest
             ],
             'env' => 'live'
         ];
-        $writer = SentryLogWriter::factory($fixture);
-        \SS_Log::add_writer($writer, \SS_Log::ERR, '<=');
-
-        // Invoke SentryLogWriter::_write()
-        \SS_Log::log('You have 10 seconds to comply.', \SS_Log::ERR);
-
-        $envThatWasSet = $writer->getClient()->getData()['env'];
-        $xtraThatWasSet = $writer->getClient()->getData()['extra'];
+        $logger = new Logger('error-log');
+        $logger->pushHandler(new SentryMonologHandler(100, true, $fixture));
+        $handler = $logger->getHandlers()[0];
+        $envThatWasSet = $handler->getClient()->getData()['env'];
+        $xtraThatWasSet = $handler->getClient()->getData()['extra'];
 
         $this->assertEquals('live', $envThatWasSet);
         $this->assertArrayHasKey('foo', $xtraThatWasSet);
         $this->assertContains('bar', $xtraThatWasSet['foo']);
-
-        // Cleanup
-        \SS_Log::remove_writer($writer);
     }
 
 }

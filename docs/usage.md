@@ -1,16 +1,19 @@
 # Usage
 
-In your project's `_config.php`, set one of the following, depending on your use-case.
+Once setup, everytime an `Exception` is thrown or PHP itself shutsdown via `trigger_error()` etc, all
+available data is automatically sent to Sentry.
 
 ## Basic
 
 ### SilverStripe 3
 
+    In your project's `_config.php`, set one of the following, depending on your use-case.
+
     SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
 
 ### SilverStripe 4
 
-Nothing to do, the logger is registered via YML config as a Monolog Handler.
+Nothing to do, the logger is registered via YML config as a Monolog Handler in the module itself.
 
 ## Set an environment
 
@@ -23,7 +26,20 @@ If an environment is not specified, the default is to use the return value of `D
 
 ### SilverStripe 4
 
-TBC
+SilverStripe 4 uses `Monolog` and individual handlers for logging. Once you instantiate a
+`Logger` object, you have access to `Monolog`'s public API.
+    
+    $config = ['env' => 'live'];
+    $logger = new Logger('error-log');
+    $handler = new PhpTek\Sentry\Handler\SentryMonologHandler();
+    $logger->pushHandler($handler);
+
+    // Send an `ERROR` level message
+    $logger->error($message, $config);
+    // Send a `WARN` level message
+    $logger->warning($message, $config);
+    // Send an `INFO` level message
+    $logger->info($message, $config);
 
 ## Set tags
 
@@ -46,7 +62,22 @@ instead.
 
 ### SilverStripe 4
 
-TBC
+    $config = [
+        'env' => 'live',
+        'tags' = [
+            'Unique-ID' => 44
+        ]
+    ];
+    $logger = new Logger('error-log');
+    $handler = new PhpTek\Sentry\Handler\SentryMonologHandler();
+    $logger->pushHandler($handler);
+
+    // Send an `ERROR` level message
+    $logger->error($message, $config);
+    // Send a `WARN` level message
+    $logger->warning($message, $config);
+    // Send an `INFO` level message
+    $logger->info($message, $config);
 
 ## Set extras
 
@@ -85,4 +116,8 @@ comprising the data you wish to send:
 
 ### SilverStripe 4
 
-TBC
+    $logger = new Logger('error-log');
+    $handler = new PhpTek\Sentry\Handler\SentryMonologHandler();
+    $logger->pushHandler($handler);
+    // Send an `ERROR` level message
+    $logger->log('ERROR', 'Help, my curry is too hot. I only asked for mild.', ['extra' => ['toilet' => 'now']]);
