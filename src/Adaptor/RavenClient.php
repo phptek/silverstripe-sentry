@@ -9,9 +9,9 @@
 
 namespace PhpTek\Sentry\Adaptor;
 
-use PhpTek\Sentry\Adaptor\SentryClientAdaptor;
-use phpTek\Sentry\Exception\SentryLogWriterException;
-use SilverStripe\Core\Config\Config;
+use PhpTek\Sentry\Adaptor\SentryClientAdaptor,
+    phpTek\Sentry\Exception\SentryLogWriterException,
+    SilverStripe\Core\Config\Config;
 
 /**
  * The RavenClient class simply acts as a bridge between the Raven PHP SDK and
@@ -123,17 +123,6 @@ class RavenClient extends SentryClientAdaptor
         return isset($this->client->logLevels[$level]) ?
             $this->client->logLevels[$level] : 
             $this->client->logLevels[self::$default_error_level];
-    }
-    
-    /**
-     * @inheritdoc
-     */
-    public function send($message, $extras = [], $data, $trace)
-    {
-        // Raven_Client::captureMessage() returns an ID to identify each message
-        $eventId = $this->client->captureMessage($message, $extras, $data, $trace);
-        
-        return $eventId ?: false;
     }
 
 }

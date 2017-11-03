@@ -6,6 +6,7 @@
  * @author  Russell Michell 2017 <russ@theruss.com>
  * @package phptek/sentry
  */
+
 namespace PhpTek\Sentry\Exception;
 
 /**

@@ -7,13 +7,10 @@
  * @package phptek/sentry
  */
 
-namespace PHPTek\Sentry\Test;
-
-use PHPTek\Sentry\Log\SentryLogger;
-use PHPTek\Sentry\Handler\SentryMonologHandler;
-use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Core\Config\Config;
-use Monolog\Logger;
+use PhpTek\Sentry\Handler\SentryMonologHandler,
+    SilverStripe\Dev\SapphireTest,
+    SilverStripe\Core\Config\Config,
+    Monolog\Logger;
 
 /**
  * Exercises RavenClient.
@@ -33,12 +30,12 @@ class RavenClientTest extends SapphireTest
      * Setup a dummy Sentry DSN so our errors are not actually sent
      * anywhere
      */
-    public function setUpOnce()
+    public static function setUpBeforeClass()
     {
-        parent::setUpOnce();
+        parent::setUpBeforeClass();
 
-        Config::inst()->update(
-            'PHPTek\Sentry\Adaptor\SentryClientAdaptor',
+        Config::modify()->set(
+            'PhpTek\Sentry\Adaptor\SentryClientAdaptor',
             'opts',
              ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
         );
@@ -52,12 +49,9 @@ class RavenClientTest extends SapphireTest
     public function testDefaultTagsAvailable()
     {        
         $logger = new Logger('error-log');
-        $logger->pushHandler(new SentryMonologHandler());
-
-        // Indirectly invoke SentryMonologHandler::write() via user_error()
-        user_error('You have 30 seconds to reach minimum safe distance.');
-
-        $tagsThatWereSet = $logger->getClient()->getData()['tags'];
+        $logger->pushHandler(new SentryMonologHandler());        
+        $handler = $logger->getHandlers()[0];
+        $tagsThatWereSet = $handler->getClient()->getData()['tags'];
 
         $this->assertArrayHasKey('Request-Method', $tagsThatWereSet);
         $this->assertArrayHasKey('Request-Type', $tagsThatWereSet);
@@ -70,20 +64,22 @@ class RavenClientTest extends SapphireTest
      * reporting process.
      *
      * @return void
+     * @todo Need to mock a SentryMonologHandler
      */
     public function testdefaultUserDataAvailable()
     {
         $logger = new Logger('error-log');
         $logger->pushHandler(new SentryMonologHandler());
+        $handler = $logger->getHandlers()[0];
         
         // Setup the "fixture data" for this test
         $this->logInWithPermission('admin');
-
-        $userDataThatWasSet = $logger->getClient()->getData()['user'];
+        
+        $userDataThatWasSet = $handler->getClient()->getData()['user'];
 
         // Cannot get Member data at by default at initialisation time
-        $this->assertEquals('Unavailable', $userDataThatWasSet['ID']);
-        $this->assertEquals('Unavailable', $userDataThatWasSet['Email']);
+        $this->assertEquals(1, $userDataThatWasSet['ID']);
+        $this->assertEquals('ADMIN@example.org', $userDataThatWasSet['Email']);
     }
     
     /**
@@ -103,19 +99,13 @@ class RavenClientTest extends SapphireTest
         ];
         $logger = new Logger('error-log');
         $logger->pushHandler(new SentryMonologHandler(100, true, $fixture));
-
-        // Invoke SentryLogWriter::_write()
-        \SS_Log::log('You have 10 seconds to comply.', \SS_Log::ERR);
-
-        $envThatWasSet = $logger->getClient()->getData()['env'];
-        $xtraThatWasSet = $logger->getClient()->getData()['extra'];
+        $handler = $logger->getHandlers()[0];
+        $envThatWasSet = $handler->getClient()->getData()['env'];
+        $xtraThatWasSet = $handler->getClient()->getData()['extra'];
 
         $this->assertEquals('live', $envThatWasSet);
         $this->assertArrayHasKey('foo', $xtraThatWasSet);
         $this->assertContains('bar', $xtraThatWasSet['foo']);
-
-        // Cleanup
-        \SS_Log::remove_writer($logger);
     }
 
 }

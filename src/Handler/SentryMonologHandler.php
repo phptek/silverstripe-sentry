@@ -7,13 +7,13 @@
  * @package phptek/sentry
  */
 
-namespace PHPTek\Sentry\Handler;
+namespace PhpTek\Sentry\Handler;
 
-use Monolog\Handler\RavenHandler;
-use Monolog\Logger;
-use SilverStripe\Dev\Backtrace;
-use SilverStripe\Security\Member;
-use PhpTek\Sentry\Log\SentryLogger;
+use Monolog\Handler\RavenHandler,
+    Monolog\Logger,
+    SilverStripe\Dev\Backtrace,
+    SilverStripe\Security\Member,
+    PhpTek\Sentry\Log\SentryLogger;
 
 /**
  * Monolog Handler for Sentry via Raven
@@ -21,6 +21,11 @@ use PhpTek\Sentry\Log\SentryLogger;
 
 class SentryMonologHandler extends RavenHandler
 {    
+    /**
+     * @var SentryClientAdaptor
+     */
+    protected $client;
+
     /**
      * @param  int   $level
      * @param  bool  $bubble
@@ -31,9 +36,19 @@ class SentryMonologHandler extends RavenHandler
     {        
         // Returns an instance of {@link SentryLogger}
         $logger = SentryLogger::factory($extras);
-        $client = $logger->client->getSDK();
+        $sdk = $logger->client->getSDK();
+        $this->client = $logger->client;
+        $this->client->setData('user', $this->getUserData(null, $logger));
         
-        parent::__construct($client, $level, $bubble);
+        parent::__construct($sdk, $level, $bubble);
+    }
+    
+    /**
+     * @return SentryClientAdaptor
+     */
+    public function getClient()
+    {
+        return $this->client;
     }
     
     /**
@@ -55,10 +70,7 @@ class SentryMonologHandler extends RavenHandler
      * @return void
      */
     protected function write(array $record)
-    {
-        $logger = SentryLogger::factory();
-        $logger->client->setData('user', $this->getUserData(null, $logger));
-        
+    {   
         // The complete compliment of these data come via the Raven_Client::xxx_context() methods
         $record = [
             'level'      => $record['level'],

@@ -29,7 +29,7 @@ abstract class SentryClientAdaptor
     {
         $opts = Config::inst()->get(__CLASS__, 'opts');
 
-        if (!is_null($opts) && !empty($opts[$opt])) {
+        if (!empty($opts[$opt])) {
             return $opts[$opt];
         }
 
@@ -48,16 +48,5 @@ abstract class SentryClientAdaptor
      * @return string
      */
     abstract public function getLevel($level);
-
-    /**
-     * Physically transport the data to the configured Sentry host.
-     *
-     * @param  string $message
-     * @param  array  $extras
-     * @param  array  $data
-     * @param  string $trace
-     * @return mixed
-     */
-    abstract public function send($message, $extras = [], $data, $trace);
     
 }
