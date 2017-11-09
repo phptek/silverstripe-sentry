@@ -1,5 +1,10 @@
 ---
-Name: sentry
+Name: sentryconfig
+Only:
+  moduleexists: 'phptek/sentry'
+After: 
+  - 'framework/*'
+  - 'cms/*'
 ---
 
 PhpTek\Sentry\Log\SentryLogger:
@@ -15,3 +20,8 @@ SilverStripe\Core\Injector\Injector:
   Psr\Log\LoggerInterface:
     calls:
       - [ pushHandler, [ %$PhpTek\Sentry\Handler\SentryMonologHandler ]]
+      
+# Dummy for unit tests, overridden by userland config
+PhpTek\Sentry\Adaptor\SentryClientAdaptor:
+  opts:
+    dsn: 'http://dummy:dummy@sentry.mydomain.nz/44'

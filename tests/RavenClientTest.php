@@ -27,21 +27,6 @@ class RavenClientTest extends SapphireTest
     protected $usesDatabase = true;
 
     /**
-     * Setup a dummy Sentry DSN so our errors are not actually sent
-     * anywhere
-     */
-    public static function setUpBeforeClass()
-    {
-        parent::setUpBeforeClass();
-
-        Config::modify()->set(
-            'PhpTek\Sentry\Adaptor\SentryClientAdaptor',
-            'opts',
-             ['dsn' => 'http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44']
-        );
-    }
-
-    /**
      * Assert that the module's default tags make it through to the reporting process.
      *
      * @return void

@@ -44,6 +44,14 @@ Configure your application or site with the Sentry DSN into your project's YML c
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
         dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
 
+Note: For ~2.0.0 you'll need to ensure your project's config that includes the Sentry DSN above, is set to 
+be after the module's config, thus:
+
+    After: 'sentryconfig'
+
+This is because a baked-in dummy DSN needed to be added to the module's config for unit-testing. This will
+need to remain in-place until the tests can be fixed to use the `Config` system properly.
+
 ### SilverStripe 3
 
     phptek\Sentry\Adaptor\SentryClientAdaptor:
