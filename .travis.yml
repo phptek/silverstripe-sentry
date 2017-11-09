@@ -27,7 +27,7 @@ before_script:
   - composer update
   
 script:
-  - if [[ $PHPUNIT_TEST ]]; then ./vendor/bin/phpunit vendor/phptek/sentry/tests; fi
+  - if [[ $PHPUNIT_TEST ]]; then vendor/bin/phpunit; fi
   
 branches:
   only:
