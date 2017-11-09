@@ -19,7 +19,7 @@
         "silverstripe/framework": "4.0.0"
     },
     "require-dev": {
-        "hafriedlander/silverstripe-phockito": "dev-master"
+      "phpunit/PHPUnit": "^5.7"
     },
     "config": {
         "process-timeout": 900
