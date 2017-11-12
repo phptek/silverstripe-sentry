@@ -23,7 +23,7 @@ before_script:
 # Install composer dependencies
   - export PATH=~/.composer/vendor/bin:$PATH
   - composer install --prefer-dist
-  - composer require --prefer-dist --no-update phpunit/phpunit:^5.7 symfony/config:^3.2 silverstripe/framework:4.0.0 silverstripe/config:1.0.0
+  - composer require --prefer-dist --no-update symfony/config:^3.2 silverstripe/framework:4.0.0 silverstripe/config:1.0.0
   - composer update
   
 script:
