@@ -1,7 +1,5 @@
 ---
 Name: sentryconfig
-Only:
-  moduleexists: 'phptek/sentry'
 ---
 
 PhpTek\Sentry\Log\SentryLogger:
