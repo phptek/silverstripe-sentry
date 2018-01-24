@@ -4,7 +4,6 @@ Only:
   moduleexists: 'phptek/sentry'
 After: 
   - 'framework/*'
-  - 'cms/*'
 ---
 
 PhpTek\Sentry\Log\SentryLogger:
