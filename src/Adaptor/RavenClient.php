@@ -21,23 +21,23 @@ use PhpTek\Sentry\Adaptor\SentryClientAdaptor,
 
 class RavenClient extends SentryClientAdaptor
 {
-    
+
     /**
      * It's an ERROR unless proven otherwise!
-     * 
+     *
      * @var    string
      * @config
      */
-    private static $default_error_level = 'ERROR';
-    
+    private static $default_error_level = 'ERR';
+
     /**
      * @var Raven_Client
      */
     protected $client;
-    
+
     /**
      * A mapping of log-level values between Zend_Log => Raven_Client
-     * 
+     *
      * @var array
      */
     protected $logLevels = [
@@ -46,22 +46,22 @@ class RavenClient extends SentryClientAdaptor
         'ERR'       => \Raven_Client::ERROR,
         'EMERG'     => \Raven_Client::FATAL
     ];
-    
+
     /**
      * @throws SentryLogWriterException
      * @return void
      */
     public function __construct()
-    {        
+    {
         if (!$dsn = $this->getOpts('dsn')) {
             $msg = sprintf("Class: %s requires a DSN string to be set in config.", __CLASS__);
             throw new SentryLogWriterException($msg);
         }
-        
+
         $this->client = new \Raven_Client($dsn);
-        
+
         // Installs all available PHP error handlers when set
-        if (Config::inst()->get(__CLASS__, 'install') === true) {
+        if (Config::inst()->get(__CLASS__, 'install')) {
             $this->client->install();
         }
     }
@@ -99,10 +99,10 @@ class RavenClient extends SentryClientAdaptor
             throw new SentryLogWriterException($msg);
         }
     }
-    
+
     /**
      * Simple accessor for data set to / on the client.
-     * 
+     *
      * @return array
      */
     public function getData()
@@ -114,14 +114,14 @@ class RavenClient extends SentryClientAdaptor
             'extra' => $this->client->context->extra,
         ];
     }
-    
+
     /**
      * @inheritdoc
      */
     public function getLevel($level)
     {
         return isset($this->client->logLevels[$level]) ?
-            $this->client->logLevels[$level] : 
+            $this->client->logLevels[$level] :
             $this->client->logLevels[self::$default_error_level];
     }
 
