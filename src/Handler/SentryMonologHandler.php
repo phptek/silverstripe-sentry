@@ -9,7 +9,7 @@
 
 namespace PhpTek\Sentry\Handler;
 
-use Monolog\Handler\RavenHandler,
+use PhpTek\Sentry\Monolog\Handler\SentryRavenHandler,
     Monolog\Logger,
     SilverStripe\Dev\Backtrace,
     SilverStripe\Security\Member,
@@ -19,7 +19,7 @@ use Monolog\Handler\RavenHandler,
  * Monolog Handler for Sentry via Raven
  */
 
-class SentryMonologHandler extends RavenHandler
+class SentryMonologHandler extends SentryRavenHandler
 {    
     /**
      * @var SentryClientAdaptor
@@ -89,7 +89,7 @@ class SentryMonologHandler extends RavenHandler
         ];
         
         // write() calls one of RavenHandler::captureException() or RavenHandler::captureMessage()
-        // depending on 
+        // depending on if $record['context']['exception'] is an instance of Exception or not
         parent::write($record);
     }
     
