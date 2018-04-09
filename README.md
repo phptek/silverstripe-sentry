@@ -29,20 +29,53 @@ Add the Composer package as a dependency to your project:
 
 ### SilverStripe 3
 
-    composer require phptek/sentry: 1.0
+    composer require phptek/sentry: 1.x
 
 ### SilverStripe 4
 
-    composer require phptek/sentry: 2.0
+    composer require phptek/sentry: 2.x
 
 Configure your application or site with the Sentry DSN into your project's YML config:
 
 ### SilverStripe 4
 
+#### General Config ####
+
+The following YML config will get you errors reported in all environment modes: `dev`, `test` and `live`: 
+
     PhpTek\Sentry\Adaptor\SentryClientAdaptor:
       opts:
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
         dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
+
+#### Conditional Config ####
+
+The following YML config will get you errors reported just in `test` and `live` but not `dev`: 
+
+    ---
+    Only:
+      environment: test
+    ---
+    PhpTek\Sentry\Adaptor\SentryClientAdaptor:
+      opts:
+        # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
+        dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
+    ---
+    Except:
+      environment: test
+    ---
+    PhpTek\Sentry\Adaptor\SentryClientAdaptor:
+      opts:
+        # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
+        dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
+    ---
+    Only:
+      environment: dev
+    ---
+    PhpTek\Sentry\Adaptor\SentryClientAdaptor:
+      opts:
+        dsn: null
+    ---
 
 Note: For ~2.0.0 you'll need to ensure your project's config that includes the Sentry DSN above, is set to 
 be after the module's config, thus:

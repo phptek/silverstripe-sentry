@@ -53,11 +53,8 @@ class RavenClient extends SentryClientAdaptor
      */
     public function __construct()
     {
-        if (!$dsn = $this->getOpts('dsn')) {
-            $msg = sprintf("Class: %s requires a DSN string to be set in config.", __CLASS__);
-            throw new SentryLogWriterException($msg);
-        }
-
+        // Yes, Raven_Client accepts `null`
+        $dsn = $this->getOpts('dsn');
         $this->client = new \Raven_Client($dsn);
 
         // Installs all available PHP error handlers when set
