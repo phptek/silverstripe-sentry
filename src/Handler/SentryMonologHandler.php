@@ -114,8 +114,13 @@ class SentryMonologHandler extends SentryRavenHandler
         ]);
         
         $bt = Backtrace::filter_backtrace($bt, [
-            'PhpTek\Sentry\Handler\SentryMonologHandler->write',
-            'PhpTek\Sentry\Handler\SentryMonologHandler->backtrace',
+            '',
+            'Monolog\\Handler\\AbstractProcessingHandler->handle',
+            'Monolog\\Logger->addRecord',
+            'Monolog\\Logger->log',
+            'Monolog\\Logger->warn',
+            'PhpTek\\Sentry\\Handler\\SentryMonologHandler->write',
+            'PhpTek\\Sentry\\Handler\\SentryMonologHandler->backtrace',
         ]);
         
         return $bt;
