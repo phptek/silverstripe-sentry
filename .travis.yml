@@ -27,6 +27,7 @@ matrix:
 
 before_script:
   - composer self-update || true
+  - composer require --no-update silverstripe/framework:4.1.0
   - composer install --prefer-dist --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile
 
 script:
