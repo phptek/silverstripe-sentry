@@ -77,6 +77,16 @@ The following YML config will get you errors reported just in `test` and `live` 
         dsn: null
     ---
 
+#### Proxies ####
+
+Should your app require outgoing traffic to be passed through a proxy, the following config
+will work.
+
+    # Proxy constants
+      http_proxy:
+        host: '`MY_OUTBOUND_PROXY`'
+        port: '`MY_OUTBOUND_PROXY_PORT`'
+
 Note: For ~2.0.0 you'll need to ensure your project's config that includes the Sentry DSN above, is set to 
 be after the module's config, thus:
 

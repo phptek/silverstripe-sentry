@@ -54,8 +54,7 @@ class RavenClient extends SentryClientAdaptor
     public function __construct()
     {
         // Yes, Raven_Client accepts `null`
-        $dsn = $this->getOpts('dsn');
-        $this->client = new \Raven_Client($dsn);
+        $this->client = new \Raven_Client($this->getOpts());
 
         // Installs all available PHP error handlers when set
         if (Config::inst()->get(__CLASS__, 'install')) {

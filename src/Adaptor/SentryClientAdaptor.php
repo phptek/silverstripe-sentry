@@ -10,6 +10,8 @@
 namespace PhpTek\Sentry\Adaptor;
 
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Injector\Injector;
+use PhpTek\Sentry\Exception\SentryClientAdaptorException;
 
 /**
  * The SentryClientAdaptor provides the base-class functionality for subclasses
@@ -22,15 +24,39 @@ abstract class SentryClientAdaptor
 {
 
     /**
-     * @param  mixed $opt
-     * @return mixed
-     */ 
-    protected function getOpts($opt)
+     * @param  string $opt
+     * @return mixed  null|string|array depending on whether $opts param is passed.
+     * @throws SentryClientAdaptorException
+     */
+    protected function getOpts($opt = '')
     {
-        $opts = Config::inst()->get(__CLASS__, 'opts');
+        // Extract env-vars from YML config
+        $opts = Injector::inst()->convertServiceProperty(Config::inst()->get(__CLASS__, 'opts'));
 
-        if (!empty($opts[$opt])) {
+        // Deal with proxy settings. Raven_Client permits host:port format but SilverStripe's
+        // YML config only permits single backtick-enclosed env/consts per config
+        if (!empty($opts['http_proxy'])) {
+            if (empty($opts['http_proxy']['host'])) {
+                throw new SentryClientAdaptorException('Proxy config found but host not set.');
+            }
+
+            if (empty($opts['http_proxy']['port'])) {
+                throw new SentryClientAdaptorException('Proxy config found but port not set.');
+            }
+
+            $opts['http_proxy'] = sprintf(
+                '%s:%s',
+                $opts['http_proxy']['host'],
+                $opts['http_proxy']['port']
+            );
+        }
+
+        if ($opt && !empty($opts[$opt])) {
+            // Return one
             return $opts[$opt];
+        } else if (!$opt) {
+            // Return all
+            return $opts;
         }
 
         return null;
@@ -43,10 +69,10 @@ abstract class SentryClientAdaptor
      * @param mixed (string | array) $data
      */
     abstract public function setData($field, $data);
-    
+
     /**
      * @return string
      */
     abstract public function getLevel($level);
-    
+
 }
