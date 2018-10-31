@@ -22,11 +22,12 @@ use PhpTek\Sentry\Exception\SentryClientAdaptorException;
 
 abstract class SentryClientAdaptor
 {
-
     /**
+     * Get various userland options to pass to Raven. Includes detecting and setting
+     * proxy options too.
+     *
      * @param  string $opt
      * @return mixed  null|string|array depending on whether $opts param is passed.
-     * @throws SentryClientAdaptorException
      */
     protected function getOpts($opt = '')
     {
@@ -36,19 +37,13 @@ abstract class SentryClientAdaptor
         // Deal with proxy settings. Raven_Client permits host:port format but SilverStripe's
         // YML config only permits single backtick-enclosed env/consts per config
         if (!empty($opts['http_proxy'])) {
-            if (empty($opts['http_proxy']['host'])) {
-                throw new SentryClientAdaptorException('Proxy config found but host not set.');
+            if (!empty($opts['http_proxy']['host']) && !empty($opts['http_proxy']['port'])) {
+                $opts['http_proxy'] = sprintf(
+                    '%s:%s',
+                    $opts['http_proxy']['host'],
+                    $opts['http_proxy']['port']
+                );
             }
-
-            if (empty($opts['http_proxy']['port'])) {
-                throw new SentryClientAdaptorException('Proxy config found but port not set.');
-            }
-
-            $opts['http_proxy'] = sprintf(
-                '%s:%s',
-                $opts['http_proxy']['host'],
-                $opts['http_proxy']['port']
-            );
         }
 
         if ($opt && !empty($opts[$opt])) {
