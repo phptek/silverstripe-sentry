@@ -7,43 +7,24 @@
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
- * 
- * 
+ *
+ *
  */
 
 namespace PhpTek\Sentry\Monolog\Handler;
 
-use Monolog\Handler\RavenHandler,
-    Monolog\Logger,
-    Raven_Client;
+use Monolog\Handler\RavenHandler;
 
 /**
  * Subclasses RavenHandler purely to overload its `write()` method.
  */
 class SentryRavenHandler extends RavenHandler
 {
-    
-    /**
-     * Translates Monolog log levels to Raven log levels.
-     * 
-     * Reproduced here because it's a private static.
-     */
-    private $logLevels = array(
-        Logger::DEBUG     => Raven_Client::DEBUG,
-        Logger::INFO      => Raven_Client::INFO,
-        Logger::NOTICE    => Raven_Client::INFO,
-        Logger::WARNING   => Raven_Client::WARNING,
-        Logger::ERROR     => Raven_Client::ERROR,
-        Logger::CRITICAL  => Raven_Client::FATAL,
-        Logger::ALERT     => Raven_Client::FATAL,
-        Logger::EMERGENCY => Raven_Client::FATAL,
-    );
-
     /**
      * Overloads RavenHandler::write() to allow a stacktrace to be passed
      * into Sentry. Otherwise, this method is identical to the one included
      * in the Monolog package.
-     * 
+     *
      * {@inheritdoc}
      */
     protected function write(array $record)
@@ -52,53 +33,53 @@ class SentryRavenHandler extends RavenHandler
         $options = [];
         $options['level'] = $this->logLevels[$record['level']];
         $options['tags'] = [];
-        
+
         if (!empty($record['extra']['tags'])) {
             $options['tags'] = array_merge($options['tags'], $record['extra']['tags']);
             unset($record['extra']['tags']);
         }
-        
+
         if (!empty($record['context']['tags'])) {
             $options['tags'] = array_merge($options['tags'], $record['context']['tags']);
             unset($record['context']['tags']);
         }
-        
+
         if (!empty($record['context']['fingerprint'])) {
             $options['fingerprint'] = $record['context']['fingerprint'];
             unset($record['context']['fingerprint']);
         }
-        
+
         if (!empty($record['context']['logger'])) {
             $options['logger'] = $record['context']['logger'];
             unset($record['context']['logger']);
         } else {
             $options['logger'] = $record['channel'];
         }
-        
+
         foreach ($this->getExtraParameters() as $key) {
             foreach (['extra', 'context'] as $source) {
                 if (!empty($record[$source][$key])) {
                     $options[$key] = $record[$source][$key];
-                    
+
                     unset($record[$source][$key]);
                 }
             }
         }
-        
+
         if (!empty($record['context'])) {
             $options['extra']['context'] = $record['context'];
-            
+
             if (!empty($record['context']['user'])) {
                 $previousUserContext = $this->ravenClient->context->user;
                 $this->ravenClient->user_context($record['context']['user']);
                 unset($options['extra']['context']['user']);
             }
         }
-        
+
         if (!empty($record['extra'])) {
             $options['extra']['extra'] = $record['extra'];
         }
-        
+
         // New for phptek/sentry
         $stack = false;
         if (!empty($record['stack'])) {
