@@ -11,10 +11,13 @@ namespace PhpTek\Sentry\Handler;
 
 use Exception;
 use Monolog\Logger;
+use PhpTek\Sentry\Adaptor\RavenClient;
+use PhpTek\Sentry\Adaptor\SentryClientAdaptor;
 use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Monolog\Handler\SentryRavenHandler;
 use SilverStripe\Dev\Backtrace;
 use SilverStripe\Security\Member;
+use SilverStripe\Security\Security;
 
 /**
  * Monolog Handler for Sentry via Raven
@@ -22,13 +25,13 @@ use SilverStripe\Security\Member;
 class SentryMonologHandler extends SentryRavenHandler
 {
     /**
-     * @var SentryClientAdaptor
+     * @var RavenClient
      */
     protected $client;
 
     /**
-     * @param  int $level
-     * @param  bool $bubble
+     * @param  int   $level
+     * @param  bool  $bubble
      * @param  array $extras Extra parameters that will become "tags" in Sentry.
      * @return void
      */
@@ -36,8 +39,8 @@ class SentryMonologHandler extends SentryRavenHandler
     {
         // Returns an instance of {@link SentryLogger}
         $logger = SentryLogger::factory($extras);
-        $sdk = $logger->client->getSDK();
-        $this->client = $logger->client;
+        $sdk = $logger->getClient()->getSDK();
+        $this->client = $logger->getClient();
         $this->client->setData('user', $this->getUserData(null, $logger));
 
         parent::__construct($sdk, $level, $bubble);
@@ -131,13 +134,14 @@ class SentryMonologHandler extends SentryRavenHandler
      * Returns a default set of additional data specific to the user's part in
      * the request.
      *
-     * @param  Member $member
+     * @param  Member       $member
+     * @param  SentryLogger $logger
      * @return array
      */
     private function getUserData(Member $member = null, $logger)
     {
         if (!$member) {
-            $member = Member::currentUser();
+            $member = Security::getCurrentUser();
         }
 
         return [
