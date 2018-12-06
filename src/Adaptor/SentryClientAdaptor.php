@@ -11,7 +11,6 @@ namespace PhpTek\Sentry\Adaptor;
 
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
-use PhpTek\Sentry\Exception\SentryClientAdaptorException;
 
 /**
  * The SentryClientAdaptor provides the base-class functionality for subclasses
@@ -66,6 +65,7 @@ abstract class SentryClientAdaptor
     abstract public function setData($field, $data);
 
     /**
+     * @param string $level
      * @return string
      */
     abstract public function getLevel($level);

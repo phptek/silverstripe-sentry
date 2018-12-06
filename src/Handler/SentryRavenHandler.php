@@ -80,10 +80,10 @@ class SentryRavenHandler extends RavenHandler
             $options['extra']['extra'] = $record['extra'];
         }
 
-        // New for phptek/sentry
+        // Save stack
         $stack = false;
-        if (!empty($record['stack'])) {
-            $stack = (bool) $record['stack'];
+        if (!empty($record['stacktrace'])) {
+            $stack = $record['stacktrace'];
         }
 
         if (!empty($this->release) && !isset($options['release'])) {

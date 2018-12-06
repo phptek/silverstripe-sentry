@@ -9,16 +9,16 @@
 
 namespace PhpTek\Sentry\Adaptor;
 
-use PhpTek\Sentry\Adaptor\SentryClientAdaptor,
-    phpTek\Sentry\Exception\SentryLogWriterException,
-    SilverStripe\Core\Config\Config;
+use phpTek\Sentry\Exception\SentryLogWriterException;
+use Raven_Client;
+use Raven_Exception;
+use SilverStripe\Core\Config\Config;
 
 /**
  * The RavenClient class simply acts as a bridge between the Raven PHP SDK and
  * the SentryLogWriter class itself. Any {@link SentryClientAdaptor} subclass
  * should be able to be swapped-out and used at any point.
  */
-
 class RavenClient extends SentryClientAdaptor
 {
 
@@ -41,20 +41,20 @@ class RavenClient extends SentryClientAdaptor
      * @var array
      */
     protected $logLevels = [
-        'NOTICE'    => \Raven_Client::INFO,
-        'WARN'      => \Raven_Client::WARNING,
-        'ERR'       => \Raven_Client::ERROR,
-        'EMERG'     => \Raven_Client::FATAL
+        'NOTICE' => Raven_Client::INFO,
+        'WARN'   => Raven_Client::WARNING,
+        'ERR'    => Raven_Client::ERROR,
+        'EMERG'  => Raven_Client::FATAL
     ];
 
     /**
      * @throws SentryLogWriterException
-     * @return void
+     * @throws Raven_Exception
      */
     public function __construct()
     {
         // Yes, Raven_Client accepts `null`
-        $this->client = new \Raven_Client($this->getOpts());
+        $this->client = new Raven_Client($this->getOpts());
 
         // Installs all available PHP error handlers when set
         if (Config::inst()->get(__CLASS__, 'install')) {
@@ -77,22 +77,22 @@ class RavenClient extends SentryClientAdaptor
      */
     public function setData($field, $data)
     {
-        switch($field) {
-        case 'env':
-            $this->client->setEnvironment($data);
-            break;
-        case 'tags':
-            $this->client->tags_context($data);
-            break;
-        case 'user':
-            $this->client->user_context($data);
-            break;
-        case 'extra':
-            $this->client->extra_context($data);
-            break;
-        default:
-            $msg = sprintf('Unknown field "%s" passed to %s().', $field, __FUNCTION__);
-            throw new SentryLogWriterException($msg);
+        switch ($field) {
+            case 'env':
+                $this->client->setEnvironment($data);
+                break;
+            case 'tags':
+                $this->client->tags_context($data);
+                break;
+            case 'user':
+                $this->client->user_context($data);
+                break;
+            case 'extra':
+                $this->client->extra_context($data);
+                break;
+            default:
+                $msg = sprintf('Unknown field "%s" passed to %s().', $field, __FUNCTION__);
+                throw new SentryLogWriterException($msg);
         }
     }
 
@@ -116,9 +116,9 @@ class RavenClient extends SentryClientAdaptor
      */
     public function getLevel($level)
     {
-        return isset($this->client->logLevels[$level]) ?
-            $this->client->logLevels[$level] :
-            $this->client->logLevels[self::$default_error_level];
+        return isset($this->logLevels[$level]) ?
+            $this->logLevels[$level] :
+            $this->logLevels[self::$default_error_level];
     }
 
 }

@@ -9,9 +9,10 @@
 
 namespace PhpTek\Sentry\Log;
 
-use SilverStripe\Control\Director,
-    SilverStripe\Core\Injector\Injector,
-    SilverStripe\Control\Middleware\TrustedProxyMiddleware;
+use PhpTek\Sentry\Adaptor\RavenClient;
+use SilverStripe\Control\Director;
+use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
+use SilverStripe\Core\Injector\Injector;
 
 /**
  * The SentryLogWriter class simply acts as a bridge between the configured Sentry
@@ -24,6 +25,10 @@ use SilverStripe\Control\Director,
 
 class SentryLogger
 {
+    /**
+     * @var RavenClient
+     */
+    public $client = null;
 
     /**
      * Stipulates what gets shown in the Sentry UI, should some metric not be
@@ -46,6 +51,7 @@ class SentryLogger
         $env = isset($config['env']) ? $config['env'] : null;
         $tags = isset($config['tags']) ? $config['tags'] : [];
         $extra = isset($config['extra']) ? $config['extra'] : [];
+        /** @var SentryLogger $logger */
         $logger = Injector::inst()->create(__CLASS__);
 
         // Set default environment
@@ -69,7 +75,7 @@ class SentryLogger
     /**
      * Used in unit tests.
      *
-     * @return SentryClientAdaptor
+     * @return RavenClient
      */
     public function getClient()
     {
