@@ -1,17 +1,12 @@
 ---
-Name: sentryconfig
+Name: sentry-config
 ---
 
 PhpTek\Sentry\Log\SentryLogger:
   dependencies:
-    client: %$PhpTek\Sentry\Adaptor\RavenClient
-    
-PhpTek\Sentry\Adaptor\RavenClient:
-  # Installs all available PHP error handlers
-  # Untested when set to true
-  install: false
+    client: %$PhpTek\Sentry\Adaptor\SentryAdaptor
 
 SilverStripe\Core\Injector\Injector:
   Psr\Log\LoggerInterface:
     calls:
-      - [ pushHandler, [ %$PhpTek\Sentry\Handler\SentryMonologHandler ]]
+      - [ pushHandler, [ %$PhpTek\Sentry\Handler\SentryHandler ]]

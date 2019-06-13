@@ -1,28 +1,24 @@
 <?php
 
 /**
- * Class: SentryLogWriter.
+ * Class: SentryLogger.
  *
- * @author  Russell Michell 2017 <russ@theruss.com>
+ * @author  Russell Michell 2017-2019 <russ@theruss.com>
  * @package phptek/sentry
  */
 
 namespace PhpTek\Sentry\Log;
 
-use PhpTek\Sentry\Adaptor\RavenClient;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Backtrace;
+use PhpTek\Sentry\Log\SentryLogger;
 
 /**
- * The SentryLogWriter class simply acts as a bridge between the configured Sentry
- * adaptor and SilverStripe's {@link SS_Log}.
- *
- * Usage in your project's _config.php for example (See README for examples).
- *
- *    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), '<=');
+ * The SentryLogWriter class is a bridge between {@link SentryAdaptor} and
+ * SilverStripe's {@link SS_Log}.
  */
-
 class SentryLogger
 {
     /**
@@ -51,8 +47,7 @@ class SentryLogger
         $env = isset($config['env']) ? $config['env'] : null;
         $tags = isset($config['tags']) ? $config['tags'] : [];
         $extra = isset($config['extra']) ? $config['extra'] : [];
-        /** @var SentryLogger $logger */
-        $logger = Injector::inst()->create(__CLASS__);
+        $logger = Injector::inst()->create(static::class);
 
         // Set default environment
         if (is_null($env)) {
@@ -236,7 +231,7 @@ class SentryLogger
 
 		if (defined('TRUSTED_PROXY')) {
 			$headers = (defined('SS_TRUSTED_PROXY_IP_HEADER')) ?
-                array(SS_TRUSTED_PROXY_IP_HEADER) :
+                [SS_TRUSTED_PROXY_IP_HEADER] :
                 null;
 
 			if(!$headers) {
@@ -265,5 +260,49 @@ class SentryLogger
 
         return '';
 	}
+
+    /**
+     * Generate a cleaned-up backtrace of the event that got us here.
+     *
+     * @param  array $record
+     * @return array
+     */
+    public static function backtrace(array $record) : array
+    {
+        // Provided trace
+        if (!empty($record['context']['trace'])) {
+            return $record['context']['trace'];
+        }
+
+        // Generate trace from exception
+        if (isset($record['context']['exception'])) {
+            $exception = $record['context']['exception'];
+
+            return $exception->getTrace();
+        }
+
+        // Failover: build custom trace
+        $bt = debug_backtrace();
+
+        // Push current line into context
+        array_unshift($bt, [
+            'file'     => !empty($bt['file']) ? $bt['file'] : 'N/A',
+            'line'     => !empty($bt['line']) ? $bt['line'] : 'N/A',
+            'function' => '',
+            'class'    => '',
+            'type'     => '',
+            'args'     => [],
+        ]);
+
+       return Backtrace::filter_backtrace($bt, [
+            '',
+            'Monolog\\Handler\\AbstractProcessingHandler->handle',
+            'Monolog\\Logger->addRecord',
+            'Monolog\\Logger->log',
+            'Monolog\\Logger->warn',
+            'PhpTek\\Sentry\\Handler\\SentryMonologHandler->write',
+            'PhpTek\\Sentry\\Handler\\SentryMonologHandler->backtrace',
+        ]);
+    }
 
 }
