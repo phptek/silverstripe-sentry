@@ -7,17 +7,15 @@
  * @package phptek/sentry
  */
 
-use PhpTek\Sentry\Handler\SentryMonologHandler,
-    SilverStripe\Dev\SapphireTest,
-    SilverStripe\Core\Config\Config,
-    Monolog\Logger;
+use SilverStripe\Dev\SapphireTest;
+use Monolog\Logger;
+use PhpTek\Sentry\Handler\SentryHandler;
 
 /**
- * Exercises RavenClient.
+ * Exercises {@link SentryHandler}.
  */
-class RavenClientTest extends SapphireTest
+class SentryHandlerTest extends SapphireTest
 {
-
     /**
      * In the absence of fixture files, this is needed to force SaphhireTest into
      * creating us a test DB.
@@ -34,7 +32,7 @@ class RavenClientTest extends SapphireTest
     public function testDefaultTagsAvailable()
     {        
         $logger = new Logger('error-log');
-        $logger->pushHandler(new SentryMonologHandler());        
+        $logger->pushHandler(SentryHandler::create());
         $handler = $logger->getHandlers()[0];
         $tagsThatWereSet = $handler->getClient()->getData()['tags'];
 
@@ -54,7 +52,7 @@ class RavenClientTest extends SapphireTest
     public function testdefaultUserDataAvailable()
     {
         $logger = new Logger('error-log');
-        $logger->pushHandler(new SentryMonologHandler());
+        $logger->pushHandler(SentryHandler::create());
         $handler = $logger->getHandlers()[0];
         
         // Setup the "fixture data" for this test
@@ -83,7 +81,7 @@ class RavenClientTest extends SapphireTest
             'env' => 'live'
         ];
         $logger = new Logger('error-log');
-        $logger->pushHandler(new SentryMonologHandler(100, true, $fixture));
+        $logger->pushHandler(SentryHandler::create(100, true, $fixture));
         $handler = $logger->getHandlers()[0];
         $envThatWasSet = $handler->getClient()->getData()['env'];
         $xtraThatWasSet = $handler->getClient()->getData()['extra'];

@@ -12,6 +12,7 @@ namespace PhpTek\Sentry\Handler;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Sentry\Severity;
+use SilverStripe\Core\Injector\Injectable;
 use PhpTek\Sentry\Log\SentryLogger;
 
 /**
@@ -23,6 +24,8 @@ use PhpTek\Sentry\Log\SentryLogger;
  */
 class SentryHandler extends AbstractProcessingHandler
 {
+    use Injectable;
+    
     /**
      * A mapping of log-level values between Zend_Log => Raven_Client
      *
@@ -84,5 +87,13 @@ class SentryHandler extends AbstractProcessingHandler
         } else {
             $this->client->getSDK()->captureMessage($record['formatted'], new Severity(strtolower($record['level_name'])));
         }
+    }
+    
+    /**
+     * @return
+     */
+    public function getClient()
+    {
+        return $this->client;
     }
 }
