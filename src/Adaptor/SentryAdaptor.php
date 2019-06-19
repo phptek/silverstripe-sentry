@@ -14,8 +14,6 @@ use Sentry\ClientBuilder;
 use Sentry\State\Scope;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Security\Security;
-use PhpTek\Sentry\Log\SentryLogger;
 
 /**
  * The SentryAdaptor provides functionality bridge between the PHP SDK and
@@ -32,9 +30,9 @@ class SentryAdaptor
     private static $default_error_level = 'ERR';
 
     /**
-     * @var ???
+     * @var ClientInterface
      */
-    protected $client;
+    protected $sentry;
 
     /**
      * @return void
@@ -44,21 +42,21 @@ class SentryAdaptor
         $client = ClientBuilder::create($this->getOpts() ?: [])->getClient();
         Hub::setCurrent(new Hub($client));
 
-        $this->client = $client;
+        $this->sentry = $client;
     }
 
     /**
-     * @return Raven_Client
+     * @return ClientInterface
      */
     public function getSDK()
     {
-        return $this->client;
+        return $this->sentry;
     }
 
     /**
      * @inheritdoc
      */
-    public function setData($field, $data)
+    public function setData(string $field, $data)
     {
         $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -94,17 +92,26 @@ class SentryAdaptor
     }
 
     /**
-     * Simple accessor for data set to / on the client.
+     * Simple getter for data set to / on the sentry client.
      *
      * @return array
      */
-    public function getData()
+    public function getData() : array
     {
+        $options = Hub::getCurrent()->getClient()->getOptions();
+        $data = [];
+        
+        Hub::getCurrent()->configureScope(function (Scope $scope) use (&$data) : void {
+                $data['user'] = $scope->getUser();
+                $data['tags'] = $scope->getTags();
+                $data['extra'] = $scope->getExtra();
+        });
+        
         return [
-            'env'   => $this->client->getEnvironment(),
-            'tags'  => $this->client->context->tags,
-            'user'  => $this->client->context->user,
-            'extra' => $this->client->context->extra,
+            'env'   => $options->getEnvironment(),
+            'tags'  => $data['tags'] ?? [],
+            'user'  => $data['user'] ?? [],
+            'extra' => $data['extra'] ?? [],
         ];
     }
 
@@ -123,7 +130,7 @@ class SentryAdaptor
      * proxy options too.
      *
      * @param  string $opt
-     * @return mixed  string|array depending on whether $opts param is passed.
+     * @return mixed  string|array|null depending on whether $opts param is passed.
      */
     protected function getOpts($opt = '')
     {
@@ -151,26 +158,5 @@ class SentryAdaptor
         }
 
         return null;
-    }
-
-    /**
-     * Returns a default set of additional data specific to the user's part in
-     * the request.
-     *
-     * @param  Member       $member
-     * @param  SentryLogger $logger
-     * @return array
-     */
-    public function getUserData(Member $member = null, SentryLogger $logger) : array
-    {
-        if (!$member) {
-            $member = Security::getCurrentUser();
-        }
-
-        return [
-            'IPddress' => $logger->getIP(),
-            'ID'       => $member ? $member->getField('ID') : SentryLogger::SLW_NOOP,
-            'Email'    => $member ? $member->getField('Email') : SentryLogger::SLW_NOOP,
-        ];
     }
 }

@@ -48,8 +48,7 @@ class SentryHandler extends AbstractProcessingHandler
     {
         // Returns an instance of {@link SentryLogger}
         $logger = SentryLogger::factory($extras);
-        $this->client = $logger->getClient();
-        $this->client->setData('user', $this->client->getUserData(null, $logger)); // <-- sems funky
+        $this->client = $logger->getAdaptor();
 
         parent::__construct($this->client->getSDK(), $level, $bubble);
     }

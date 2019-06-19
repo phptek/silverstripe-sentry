@@ -14,6 +14,7 @@ use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\Backtrace;
 use PhpTek\Sentry\Log\SentryLogger;
+use SilverStripe\Security\Security;
 
 /**
  * The SentryLogWriter class is a bridge between {@link SentryAdaptor} and
@@ -22,7 +23,7 @@ use PhpTek\Sentry\Log\SentryLogger;
 class SentryLogger
 {
     /**
-     * @var RavenClient
+     * @var SentryAdaptor
      */
     public $client = null;
 
@@ -44,37 +45,35 @@ class SentryLogger
      */
     public static function factory($config = [])
     {
-        $env = isset($config['env']) ? $config['env'] : null;
-        $tags = isset($config['tags']) ? $config['tags'] : [];
-        $extra = isset($config['extra']) ? $config['extra'] : [];
+        $env = $config['env'] ?? [];
+        $user = $config['user'] ?? [];
+        $tags = $config['tags'] ?? [];
+        $extra = $config['extra'] ?? [];
         $logger = Injector::inst()->create(static::class);
 
         // Set default environment
-        if (is_null($env)) {
-            $env = $logger->defaultEnv();
-        }
-
+        $env = $env ?: $logger->defaultEnv();
+        // Set any available user data
+        $user = $user ?: array_merge($logger->defaultUser());
         // Set any available tags available in SS config
         $tags = array_merge($logger->defaultTags(), $tags);
-
         // Set any available additional (extra) data
         $extra = array_merge($logger->defaultExtra(), $extra);
 
-        $logger->client->setData('env', $env);
-        $logger->client->setData('tags', $tags);
-        $logger->client->setData('extra', $extra);
+        $logger->adaptor->setData('env', $env);
+        $logger->adaptor->setData('tags', $tags);
+        $logger->adaptor->setData('extra', $extra);
+        $logger->adaptor->setData('user', $user);
 
         return $logger;
     }
 
     /**
-     * Used in unit tests.
-     *
-     * @return RavenClient
+     * @return SentryAdaptor
      */
-    public function getClient()
+    public function getAdaptor()
     {
-        return $this->client;
+        return $this->adaptor;
     }
 
     /**
@@ -260,6 +259,26 @@ class SentryLogger
 
         return '';
 	}
+
+    /**
+     * Returns a default set of additional data specific to the user's part in
+     * the request.
+     *
+     * @param  mixed Member|null $member
+     * @return array
+     */
+    public function defaultUser(Member $member = null) : array
+    {
+        if (!$member) {
+            $member = Security::getCurrentUser();
+        }
+        
+        return [
+            'IPddress' => $this->getIP(),
+            'ID'       => $member ? $member->getField('ID') : self::SLW_NOOP,
+            'Email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
+        ];
+    }
 
     /**
      * Generate a cleaned-up backtrace of the event that got us here.
