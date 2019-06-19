@@ -12,7 +12,8 @@ namespace PhpTek\Sentry\Adaptor;
 use Sentry\State\Hub;
 use Sentry\ClientBuilder;
 use Sentry\State\Scope;
-use SilverStripe\Core\Config\Config;
+use Sentry\Severity;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
 
 /**
@@ -21,6 +22,8 @@ use SilverStripe\Core\Injector\Injector;
  */
 class SentryAdaptor
 {
+    use Configurable;
+    
     /**
      * It's an ERROR unless proven otherwise!
      *
@@ -33,6 +36,18 @@ class SentryAdaptor
      * @var ClientInterface
      */
     protected $sentry;
+        
+    /**
+     * A mapping of log-level values between Zend_Log => Raven_Client
+     *
+     * @var array
+     */
+    protected $logLevels = [
+        'NOTICE' => Severity::INFO,
+        'WARN'   => Severity::WARNING,
+        'ERR'    => Severity::ERROR,
+        'EMERG'  => Severity::FATAL
+    ];
 
     /**
      * @return void
@@ -135,7 +150,7 @@ class SentryAdaptor
     protected function getOpts($opt = '')
     {
         // Extract env-vars from YML config
-        $opts = Injector::inst()->convertServiceProperty(Config::inst()->get(__CLASS__, 'opts'));
+        $opts = Injector::inst()->convertServiceProperty($this->config()->get('opts'));
 
         // Deal with proxy settings. Raven_Client permits host:port format but SilverStripe's
         // YML config only permits single backtick-enclosed env/consts per config

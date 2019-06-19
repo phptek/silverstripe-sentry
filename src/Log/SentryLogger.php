@@ -13,12 +13,13 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\Backtrace;
-use PhpTek\Sentry\Log\SentryLogger;
 use SilverStripe\Security\Security;
+use PhpTek\Sentry\Log\SentryLogger;
+use PhpTek\Sentry\Adaptor\SentryAdaptor;
 
 /**
  * The SentryLogWriter class is a bridge between {@link SentryAdaptor} and
- * SilverStripe's {@link SS_Log}.
+ * SilverStripe's use of Monolog.
  */
 class SentryLogger
 {
@@ -43,7 +44,7 @@ class SentryLogger
      *                          for more detail.
      * @return SentryLogger
      */
-    public static function factory($config = [])
+    public static function factory(array $config = []) : SentryLogger
     {
         $env = $config['env'] ?? [];
         $user = $config['user'] ?? [];
@@ -71,7 +72,7 @@ class SentryLogger
     /**
      * @return SentryAdaptor
      */
-    public function getAdaptor()
+    public function getAdaptor() : SentryAdaptor
     {
         return $this->adaptor;
     }

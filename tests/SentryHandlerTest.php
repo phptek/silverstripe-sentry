@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Class: RavenClientTest.
+ * Class: SentryHandlerTest.
  *
- * @author  Russell Michell 2017 <russ@theruss.com>
+ * @author  Russell Michell 2017-2019 <russ@theruss.com>
  * @package phptek/sentry
  */
 
@@ -29,7 +29,7 @@ class SentryHandlerTest extends SapphireTest
      *
      * @return void
      */
-    public function testDefaultTagsAvailable()
+    public function testTagsAvailable() : void
     {        
         $logger = new Logger('error-log');
         $logger->pushHandler(SentryHandler::create());
@@ -47,9 +47,8 @@ class SentryHandlerTest extends SapphireTest
      * reporting process.
      *
      * @return void
-     * @todo Need to mock a SentryMonologHandler
      */
-    public function testdefaultUserDataAvailable()
+    public function testUserDataAvailable() : void
     {
         $logger = new Logger('error-log');
         $logger->pushHandler(SentryHandler::create());
@@ -61,7 +60,6 @@ class SentryHandlerTest extends SapphireTest
         $userDataThatWasSet = $handler->getClient()->getData()['user'];
 
         // Cannot get Member data at by default at initialisation time
-        $this->assertEquals(1, $userDataThatWasSet['ID']);
         $this->assertEquals('ADMIN@example.org', $userDataThatWasSet['Email']);
     }
     
@@ -71,7 +69,7 @@ class SentryHandlerTest extends SapphireTest
      *
      * @return void
      */
-    public function testExtrasAvailable()
+    public function testExtrasAvailable() : void
     {
         // Register SentryLogWriter with some custom context
         $fixture = [
@@ -90,5 +88,4 @@ class SentryHandlerTest extends SapphireTest
         $this->assertArrayHasKey('foo', $xtraThatWasSet);
         $this->assertContains('bar', $xtraThatWasSet['foo']);
     }
-
 }

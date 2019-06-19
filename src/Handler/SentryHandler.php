@@ -16,27 +16,12 @@ use SilverStripe\Core\Injector\Injectable;
 use PhpTek\Sentry\Log\SentryLogger;
 
 /**
- * Handler to send messages to a Sentry (https://github.com/getsentry/sentry) server
- * using sentry-php (https://github.com/getsentry/sentry-php)
- *
- * This is the entry point for error handling in SilverStripe. See _config/config.yml
- * for how we push the handler onto the stack.
+ * Monolog handler to send messages to a Sentry (https://github.com/getsentry/sentry) server
+ * using sentry-php (https://github.com/getsentry/sentry-php).
  */
 class SentryHandler extends AbstractProcessingHandler
 {
     use Injectable;
-    
-    /**
-     * A mapping of log-level values between Zend_Log => Raven_Client
-     *
-     * @var array
-     */
-    protected $logLevels = [
-        'NOTICE' => Severity::INFO,
-        'WARN'   => Severity::WARNING,
-        'ERR'    => Severity::ERROR,
-        'EMERG'  => Severity::FATAL
-    ];
 
     /**
      * @param  int     $level
