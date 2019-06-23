@@ -14,6 +14,7 @@ use Monolog\Logger;
 use Sentry\Severity;
 use SilverStripe\Core\Injector\Injectable;
 use PhpTek\Sentry\Log\SentryLogger;
+use PhpTek\Sentry\Adaptor\SentryAdaptor;
 
 /**
  * Monolog handler to send messages to a Sentry (https://github.com/getsentry/sentry) server
@@ -29,7 +30,7 @@ class SentryHandler extends AbstractProcessingHandler
      * @param  array   $extras
      * @return void
      */
-    public function __construct($level = Logger::DEBUG, $bubble = true, array $extras = [])
+    public function __construct(int $level = Logger::DEBUG, bool $bubble = true, array $extras = [])
     {
         // Returns an instance of {@link SentryLogger}
         $logger = SentryLogger::factory($extras);
@@ -74,9 +75,9 @@ class SentryHandler extends AbstractProcessingHandler
     }
     
     /**
-     * @return
+     * @return SentryAdaptor
      */
-    public function getClient()
+    public function getClient() : SentryAdaptor
     {
         return $this->client;
     }

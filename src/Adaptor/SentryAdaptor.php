@@ -13,6 +13,7 @@ use Sentry\State\Hub;
 use Sentry\ClientBuilder;
 use Sentry\State\Scope;
 use Sentry\Severity;
+use Sentry\ClientInterface;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
 
@@ -63,15 +64,18 @@ class SentryAdaptor
     /**
      * @return ClientInterface
      */
-    public function getSDK()
+    public function getSDK() : ClientInterface
     {
         return $this->sentry;
     }
 
     /**
-     * @inheritdoc
+     * @param  string $field
+     * @param  array  $data
+     * @return void
+     * @throws SentryLogWriterException
      */
-    public function setData(string $field, $data)
+    public function setData(string $field, array $data) : void
     {
         $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -89,7 +93,7 @@ class SentryAdaptor
             case 'user':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
                     foreach ($data as $userKey => $userData) {
-                        $scope->setUser($data);
+                        $scope->setUser($userKey, $userData);
                     }
                 });
                 break;
@@ -131,9 +135,10 @@ class SentryAdaptor
     }
 
     /**
-     * @inheritdoc
+     * @param  string $level
+     * @return string
      */
-    public function getLevel($level)
+    public function getLevel(string $level) : string
     {
         return isset($this->logLevels[$level]) ?
             $this->logLevels[$level] :
@@ -145,9 +150,9 @@ class SentryAdaptor
      * proxy options too.
      *
      * @param  string $opt
-     * @return mixed  string|array|null depending on whether $opts param is passed.
+     * @return mixed  string|array|null depending on whether $opts is passed.
      */
-    protected function getOpts($opt = '')
+    protected function getOpts(string $opt = '')
     {
         // Extract env-vars from YML config
         $opts = Injector::inst()->convertServiceProperty($this->config()->get('opts'));

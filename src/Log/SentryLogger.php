@@ -83,7 +83,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function defaultEnv()
+    public function defaultEnv() : string
     {
         return Director::get_environment_type();
     }
@@ -103,7 +103,7 @@ class SentryLogger
      *
      * @return array
      */
-    public function defaultTags()
+    public function defaultTags() : array
     {
         return [
             'Request-Method'=> $this->getReqMethod(),
@@ -121,7 +121,7 @@ class SentryLogger
      *
      * @return array
      */
-    public function defaultExtra()
+    public function defaultExtra() : array
     {
         return [
             'Peak-Memory'   => $this->getPeakMemory()
@@ -134,7 +134,7 @@ class SentryLogger
      * @param  string $pkg e.g. "silverstripe/framework"
      * @return string
      */
-    public function getPackageInfo($pkg)
+    public function getPackageInfo(string $pkg) : string
     {
         $lockFileJSON = BASE_PATH . '/composer.lock';
 
@@ -159,7 +159,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getRequestType()
+    public function getRequestType() : string
     {
         $isCLI = $this->getSAPI() !== 'cli';
         $isAjax = Director::is_ajax();
@@ -170,9 +170,9 @@ class SentryLogger
     /**
      * Return peak memory usage.
      *
-     * @return float
+     * @return string
      */
-    public function getPeakMemory()
+    public function getPeakMemory() : string
     {
         $peak = memory_get_peak_usage(true) / 1024 / 1024;
 
@@ -184,7 +184,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getUserAgent()
+    public function getUserAgent() : string
     {
         $ua = @$_SERVER['HTTP_USER_AGENT'];
 
@@ -200,7 +200,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getReqMethod()
+    public function getReqMethod() : string
     {
         $method = @$_SERVER['REQUEST_METHOD'];
 
@@ -214,7 +214,7 @@ class SentryLogger
     /**
      * @return string
      */
-    public function getSAPI()
+    public function getSAPI() : string
     {
         return php_sapi_name();
     }
@@ -225,7 +225,7 @@ class SentryLogger
 	 *
 	 * @return string
 	 */
-	public function getIP()
+	public function getIP() : string
     {
 		$headerOverrideIP = null;
 
