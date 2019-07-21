@@ -71,11 +71,11 @@ class SentryAdaptor
 
     /**
      * @param  string $field
-     * @param  array  $data
+     * @param  mixed  $data
      * @return void
      * @throws SentryLogWriterException
      */
-    public function setData(string $field, array $data) : void
+    public function setData(string $field, $data) : void
     {
         $options = Hub::getCurrent()->getClient()->getOptions();
 
@@ -92,9 +92,7 @@ class SentryAdaptor
                 break;
             case 'user':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
-                    foreach ($data as $userKey => $userData) {
-                        $scope->setUser($userKey, $userData);
-                    }
+                    $scope->setUser($data);
                 });
                 break;
             case 'extra':

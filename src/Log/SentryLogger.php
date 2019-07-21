@@ -55,7 +55,7 @@ class SentryLogger
         // Set default environment
         $env = $env ?: $logger->defaultEnv();
         // Set any available user data
-        $user = $user ?: array_merge($logger->defaultUser());
+        $user = $user ?: $logger->defaultUser();
         // Set any available tags available in SS config
         $tags = array_merge($logger->defaultTags(), $tags);
         // Set any available additional (extra) data
@@ -275,7 +275,7 @@ class SentryLogger
         }
         
         return [
-            'IPddress' => $this->getIP(),
+            'IPAddress' => $this->getIP(),
             'ID'       => $member ? $member->getField('ID') : self::SLW_NOOP,
             'Email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
         ];
