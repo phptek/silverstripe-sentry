@@ -102,6 +102,11 @@ class SentryAdaptor
                     }
                 });
                 break;
+            case 'level':
+                Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
+                    $scope->setLevel($data);
+                });
+                break;
             default:
                 $msg = sprintf('Unknown field "%s" passed to %s().', $field, __FUNCTION__);
                 throw new SentryLogWriterException($msg);

@@ -14,6 +14,7 @@ use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\Backtrace;
 use SilverStripe\Security\Security;
+use SilverStripe\Core\Config\Configurable;
 use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
 
@@ -23,6 +24,8 @@ use PhpTek\Sentry\Adaptor\SentryAdaptor;
  */
 class SentryLogger
 {
+    use Configurable;
+    
     /**
      * @var SentryAdaptor
      */
@@ -50,6 +53,8 @@ class SentryLogger
         $user = $config['user'] ?? [];
         $tags = $config['tags'] ?? [];
         $extra = $config['extra'] ?? [];
+        // Set the minimum reporting level
+        $level = $config['level'] ?? self::config()->get('log_level');
         $logger = Injector::inst()->create(static::class);
 
         // Set default environment
@@ -65,6 +70,7 @@ class SentryLogger
         $logger->adaptor->setData('tags', $tags);
         $logger->adaptor->setData('extra', $extra);
         $logger->adaptor->setData('user', $user);
+        $logger->adaptor->setData('level', $level);
 
         return $logger;
     }
@@ -286,6 +292,7 @@ class SentryLogger
      *
      * @param  array $record
      * @return array
+     * @todo   Unused in sentry-sdk 2.0??
      */
     public static function backtrace(array $record) : array
     {
