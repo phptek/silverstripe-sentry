@@ -15,6 +15,7 @@ use PhpTek\Sentry\Adaptor\RavenClient;
 use PhpTek\Sentry\Adaptor\SentryClientAdaptor;
 use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Monolog\Handler\SentryRavenHandler;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\Backtrace;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
@@ -35,13 +36,16 @@ class SentryMonologHandler extends SentryRavenHandler
      * @param  array $extras Extra parameters that will become "tags" in Sentry.
      * @return void
      */
-    public function __construct($level = Logger::DEBUG, $bubble = true, $extras = [])
+    public function __construct($level = Logger::WARNING, $bubble = true, $extras = [])
     {
         // Returns an instance of {@link SentryLogger}
         $logger = SentryLogger::factory($extras);
         $sdk = $logger->getClient()->getSDK();
         $this->client = $logger->getClient();
         $this->client->setData('user', $this->getUserData(null, $logger));
+
+        $log_level = Config::inst()->get(self::class, 'log_level');
+        $level = ($log_level) ? constant(Logger::class . '::'. $log_level) : $level;
 
         parent::__construct($sdk, $level, $bubble);
     }

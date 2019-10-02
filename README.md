@@ -95,6 +95,28 @@ be after the module's config, thus:
 This is because a baked-in dummy DSN needed to be added to the module's config for unit-testing. This will
 need to remain in-place until the tests can be fixed to use the `Config` system properly.
 
+#### Log Level ####
+
+You can set the minimum log-level you're interested in, using the `log_level` config:
+
+For version 2.0.x:
+```
+PhpTek\Sentry\Handler\SentryMonologHandler:
+  # One of the permitted severities: DEBUG|INFO|NOTICE|WARNING|ERROR|CRITICAL|FATAL|EMERGENCY
+  log_level: WARNING
+```
+
+For version 3.0.x:
+```
+PhpTek\Sentry\Log\SentryLogger:
+  # One of the permitted severities: DEBUG|INFO|WARNING|ERROR|FATAL
+  log_level: WARNING
+```
+
+If you're interested to know how Sentry itself maps its own categories of message to
+PHP's internals, see the `fromError()` method here: https://github.com/getsentry/sentry-php/blob/master/src/Severity.php
+
+
 ### SilverStripe 3
 
     phptek\Sentry\Adaptor\SentryClientAdaptor:
