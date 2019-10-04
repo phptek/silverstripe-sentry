@@ -24,7 +24,7 @@ use SilverStripe\Core\Injector\Injector;
 class SentryAdaptor
 {
     use Configurable;
-    
+
     /**
      * It's an ERROR unless proven otherwise!
      *
@@ -37,7 +37,7 @@ class SentryAdaptor
      * @var ClientInterface
      */
     protected $sentry;
-        
+
     /**
      * A mapping of log-level values between Zend_Log => Raven_Client
      *
@@ -104,7 +104,7 @@ class SentryAdaptor
                 break;
             case 'level':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
-                    $scope->setLevel($data);
+                    $scope->setLevel(new Severity(strtolower($data)));
                 });
                 break;
             default:
@@ -122,13 +122,13 @@ class SentryAdaptor
     {
         $options = Hub::getCurrent()->getClient()->getOptions();
         $data = [];
-        
+
         Hub::getCurrent()->configureScope(function (Scope $scope) use (&$data) : void {
                 $data['user'] = $scope->getUser();
                 $data['tags'] = $scope->getTags();
                 $data['extra'] = $scope->getExtra();
         });
-        
+
         return [
             'env'   => $options->getEnvironment(),
             'tags'  => $data['tags'] ?? [],
