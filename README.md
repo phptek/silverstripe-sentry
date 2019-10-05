@@ -40,6 +40,9 @@ Add the Composer package as a dependency to your project:
 Note that 2.x and 3.x should work with the same setups, the latter simply uses a
 newer version of the Sentry PHP SDK, and has a leaner codebase.
 
+The only change with 3.x is that `SentryClientAdaptor` has been renamed to `SentryAdaptor`,
+meaning your configuration will have to be updated accordingly.
+
 Configure your application or site with the Sentry DSN into your project's YML config:
 
 ### SilverStripe 4
@@ -48,7 +51,7 @@ Configure your application or site with the Sentry DSN into your project's YML c
 
 The following YML config will get you errors reported in all environment modes: `dev`, `test` and `live`: 
 
-    PhpTek\Sentry\Adaptor\SentryClientAdaptor:
+    PhpTek\Sentry\Adaptor\SentryAdaptor:
       opts:
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
         dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
@@ -61,7 +64,7 @@ The following YML config will get you errors reported just in `test` and `live` 
     Only:
       environment: test
     ---
-    PhpTek\Sentry\Adaptor\SentryClientAdaptor:
+    PhpTek\Sentry\Adaptor\SentryAdaptor:
       opts:
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
         dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
@@ -69,7 +72,7 @@ The following YML config will get you errors reported just in `test` and `live` 
     Except:
       environment: test
     ---
-    PhpTek\Sentry\Adaptor\SentryClientAdaptor:
+    PhpTek\Sentry\Adaptor\SentryAdaptor:
       opts:
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
         dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
@@ -77,7 +80,7 @@ The following YML config will get you errors reported just in `test` and `live` 
     Only:
       environment: dev
     ---
-    PhpTek\Sentry\Adaptor\SentryClientAdaptor:
+    PhpTek\Sentry\Adaptor\SentryAdaptor:
       opts:
         dsn: null
     ---

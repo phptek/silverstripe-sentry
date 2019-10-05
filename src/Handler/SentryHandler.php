@@ -36,7 +36,7 @@ class SentryHandler extends AbstractProcessingHandler
         $logger = SentryLogger::factory($extras);
         $this->client = $logger->getAdaptor();
 
-        parent::__construct($this->client->getSDK(), $level, $bubble);
+        parent::__construct($level, $bubble);
     }
 
     /**
@@ -73,7 +73,7 @@ class SentryHandler extends AbstractProcessingHandler
             $this->client->getSDK()->captureMessage($record['formatted'], new Severity(strtolower($record['level_name'])));
         }
     }
-    
+
     /**
      * @return SentryAdaptor
      */
