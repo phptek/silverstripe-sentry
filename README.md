@@ -15,7 +15,7 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 ### SilverStripe 4
 
- * PHP5.6+, <7.2
+ * PHP 7.0+
  * SilverStripe v4.0.0+
 
 ### SilverStripe 3
