@@ -32,9 +32,9 @@ class RavenClientTest extends SapphireTest
      * @return void
      */
     public function testDefaultTagsAvailable()
-    {        
+    {
         $logger = new Logger('error-log');
-        $logger->pushHandler(new SentryMonologHandler());        
+        $logger->pushHandler(new SentryMonologHandler());
         $handler = $logger->getHandlers()[0];
         $tagsThatWereSet = $handler->getClient()->getData()['tags'];
 
@@ -56,17 +56,17 @@ class RavenClientTest extends SapphireTest
         $logger = new Logger('error-log');
         $logger->pushHandler(new SentryMonologHandler());
         $handler = $logger->getHandlers()[0];
-        
+
         // Setup the "fixture data" for this test
         $this->logInWithPermission('admin');
-        
+
         $userDataThatWasSet = $handler->getClient()->getData()['user'];
 
         // Cannot get Member data at by default at initialisation time
-        $this->assertEquals(1, $userDataThatWasSet['ID']);
+        $this->assertInternalType('int', $userDataThatWasSet['ID']);
         $this->assertEquals('ADMIN@example.org', $userDataThatWasSet['Email']);
     }
-    
+
     /**
      * Assert that custom "additional" (extra) data, (extras, tags env etc) makes
      * it through to the reporting process.
@@ -82,6 +82,7 @@ class RavenClientTest extends SapphireTest
             ],
             'env' => 'live'
         ];
+
         $logger = new Logger('error-log');
         $logger->pushHandler(new SentryMonologHandler(100, true, $fixture));
         $handler = $logger->getHandlers()[0];

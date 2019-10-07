@@ -12,9 +12,6 @@ env:
 matrix:
   fast_finish: true
   include:
-    - php: 5.6
-      env:
-        - DB=MYSQL
     - php: 7.0
       env:
         - DB=MYSQL
@@ -24,10 +21,16 @@ matrix:
     - php: 7.2
       env:
         - DB=MYSQL
+    - php: 7.3
+      env:
+        - DB=MYSQL
+
+services:
+  - mysql
 
 before_script:
   - composer self-update || true
-  - composer require --no-update silverstripe/recipe-cms:1.1.x-dev
+  - composer require --no-update silverstripe/recipe-cms:4.4.0
   - composer install --prefer-dist --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile
 
 script:
