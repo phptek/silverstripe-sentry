@@ -18,37 +18,17 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
 
 /**
- * The SentryAdaptor provides functionality bridge between the PHP SDK and
- * {@link SentryLogger} itself.
+ * The SentryAdaptor provides a functionality bridge between the getsentry/sentry
+ * PHP SDK and {@link SentryLogger} itself.
  */
 class SentryAdaptor
 {
     use Configurable;
 
     /**
-     * It's an ERROR unless proven otherwise!
-     *
-     * @var    string
-     * @config
-     */
-    private static $default_error_level = 'ERR';
-
-    /**
      * @var ClientInterface
      */
     protected $sentry;
-
-    /**
-     * A mapping of log-level values between Zend_Log => Raven_Client
-     *
-     * @var array
-     */
-    protected $logLevels = [
-        'NOTICE' => Severity::INFO,
-        'WARN'   => Severity::WARNING,
-        'ERR'    => Severity::ERROR,
-        'EMERG'  => Severity::FATAL
-    ];
 
     /**
      * @return void
@@ -135,17 +115,6 @@ class SentryAdaptor
             'user'  => $data['user'] ?? [],
             'extra' => $data['extra'] ?? [],
         ];
-    }
-
-    /**
-     * @param  string $level
-     * @return string
-     */
-    public function getLevel(string $level) : string
-    {
-        return isset($this->logLevels[$level]) ?
-            $this->logLevels[$level] :
-            $this->logLevels[self::$default_error_level];
     }
 
     /**
