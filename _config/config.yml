@@ -3,6 +3,7 @@ Name: sentryconfig
 ---
 
 PhpTek\Sentry\Log\SentryLogger:
+  log_level: WARNING
   dependencies:
     client: %$PhpTek\Sentry\Adaptor\RavenClient
     
