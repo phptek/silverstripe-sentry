@@ -15,7 +15,7 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 ### SilverStripe 4
 
- * PHP >7.0
+ * PHP >=7.0
  * SilverStripe ^4.0
 
 ### SilverStripe 3
@@ -40,7 +40,7 @@ Add the Composer package as a dependency to your project:
 Note that 2.x and 3.x should work with the same setups, the latter simply uses a
 newer version of the Sentry PHP SDK, and has a leaner codebase.
 
-The only change with 3.x is that `SentryClientAdaptor` has been renamed to `SentryAdaptor`,
+Note that with 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor`,
 meaning your configuration will have to be updated accordingly.
 
 Configure your application or site with the Sentry DSN into your project's YML config:
@@ -51,6 +51,12 @@ Configure your application or site with the Sentry DSN into your project's YML c
 
 The following YML config will get you errors reported in all environment modes: `dev`, `test` and `live`: 
 
+    ---
+    Name: my-project-config-sentry
+    After:
+      - 'sentry-config'
+    ---
+
     PhpTek\Sentry\Adaptor\SentryAdaptor:
       opts:
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
@@ -60,6 +66,10 @@ The following YML config will get you errors reported in all environment modes: 
 
 The following YML config will get you errors reported just in `test` and `live` but not `dev`: 
 
+    ---
+    Name: my-project-config-sentry
+    After:
+      - 'sentry-config'
     ---
     Only:
       environment: test
@@ -95,13 +105,10 @@ will work.
         host: '`MY_OUTBOUND_PROXY`'
         port: '`MY_OUTBOUND_PROXY_PORT`'
 
-Note: For ~2.0.0 you'll need to ensure your project's config that includes the Sentry DSN above, is set to 
-be after the module's config, thus:
+Note: As per the examles above, ensure your project's Sentry config is set to come *after* the module's own config, thus:
 
-    After: 'sentryconfig'
-
-This is because a baked-in dummy DSN needed to be added to the module's config for unit-testing. This will
-need to remain in-place until the tests can be fixed to use the `Config` system properly.
+    After:
+      - 'sentry-config'
 
 #### Log Level ####
 
@@ -114,7 +121,7 @@ PhpTek\Sentry\Log\SentryLogger:
 ```
 
 If you're interested to know how Sentry itself maps its own categories of message to
-PHP's intrnals, see the `fromError()` method here: https://github.com/getsentry/sentry-php/blob/master/src/Severity.php
+PHP's internals, see the `fromError()` method here: https://github.com/getsentry/sentry-php/blob/master/src/Severity.php
 
 ### SilverStripe 3
 
@@ -125,12 +132,11 @@ PHP's intrnals, see the `fromError()` method here: https://github.com/getsentry/
 
 ## Usage
 
-Sentry is normally setup once in your project's YML config or `_config.php` file. See the [usage docs](docs/usage.md) for details and options.
+Sentry is normally setup once in your project's YML config or `_config.php` file. See the above examples and the [usage docs](docs/usage.md) for details and options.
 
 ## Known Issues
 
-The stacktrace does not show in SilverStripe 4. We're using the `Monolog` package's `RavenHandler` which isn't as fully functional.
-There is a PR in that fixes the problem here: https://github.com/Seldaek/monolog/pull/1075.
+The stacktrace in SilverStripe 4 also sometimes includes the stacktrace of sentry itself! (See #26).
 
 ## TODO
 
