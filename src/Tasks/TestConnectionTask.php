@@ -4,6 +4,7 @@ namespace PhpTek\Sentry\Tasks;
 
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
+use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\BuildTask;
 
