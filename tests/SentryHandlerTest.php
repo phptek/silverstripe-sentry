@@ -1,23 +1,21 @@
 <?php
 
 /**
- * Class: RavenClientTest.
+ * Class: SentryHandlerTest.
  *
- * @author  Russell Michell 2017 <russ@theruss.com>
+ * @author  Russell Michell 2017-2019 <russ@theruss.com>
  * @package phptek/sentry
  */
 
-use PhpTek\Sentry\Handler\SentryMonologHandler,
-    SilverStripe\Dev\SapphireTest,
-    SilverStripe\Core\Config\Config,
-    Monolog\Logger;
+use SilverStripe\Dev\SapphireTest;
+use Monolog\Logger;
+use PhpTek\Sentry\Handler\SentryHandler;
 
 /**
- * Exercises RavenClient.
+ * Exercises {@link SentryHandler}.
  */
-class RavenClientTest extends SapphireTest
+class SentryHandlerTest extends SapphireTest
 {
-
     /**
      * In the absence of fixture files, this is needed to force SaphhireTest into
      * creating us a test DB.
@@ -31,10 +29,17 @@ class RavenClientTest extends SapphireTest
      *
      * @return void
      */
+<<<<<<< HEAD:tests/RavenClientTest.php
     public function testDefaultTagsAvailable()
     {
         $logger = new Logger('error-log');
         $logger->pushHandler(new SentryMonologHandler());
+=======
+    public function testTagsAvailable() : void
+    {        
+        $logger = new Logger('error-log');
+        $logger->pushHandler(SentryHandler::create());
+>>>>>>> 3.0:tests/SentryHandlerTest.php
         $handler = $logger->getHandlers()[0];
         $tagsThatWereSet = $handler->getClient()->getData()['tags'];
 
@@ -49,12 +54,11 @@ class RavenClientTest extends SapphireTest
      * reporting process.
      *
      * @return void
-     * @todo Need to mock a SentryMonologHandler
      */
-    public function testdefaultUserDataAvailable()
+    public function testUserDataAvailable() : void
     {
         $logger = new Logger('error-log');
-        $logger->pushHandler(new SentryMonologHandler());
+        $logger->pushHandler(SentryHandler::create());
         $handler = $logger->getHandlers()[0];
 
         // Setup the "fixture data" for this test
@@ -63,7 +67,10 @@ class RavenClientTest extends SapphireTest
         $userDataThatWasSet = $handler->getClient()->getData()['user'];
 
         // Cannot get Member data at by default at initialisation time
+<<<<<<< HEAD:tests/RavenClientTest.php
         $this->assertInternalType('int', $userDataThatWasSet['ID']);
+=======
+>>>>>>> 3.0:tests/SentryHandlerTest.php
         $this->assertEquals('ADMIN@example.org', $userDataThatWasSet['Email']);
     }
 
@@ -73,7 +80,7 @@ class RavenClientTest extends SapphireTest
      *
      * @return void
      */
-    public function testExtrasAvailable()
+    public function testExtrasAvailable() : void
     {
         // Register SentryLogWriter with some custom context
         $fixture = [
@@ -84,7 +91,7 @@ class RavenClientTest extends SapphireTest
         ];
 
         $logger = new Logger('error-log');
-        $logger->pushHandler(new SentryMonologHandler(100, true, $fixture));
+        $logger->pushHandler(SentryHandler::create(100, true, $fixture));
         $handler = $logger->getHandlers()[0];
         $envThatWasSet = $handler->getClient()->getData()['env'];
         $xtraThatWasSet = $handler->getClient()->getData()['extra'];
@@ -93,5 +100,4 @@ class RavenClientTest extends SapphireTest
         $this->assertArrayHasKey('foo', $xtraThatWasSet);
         $this->assertContains('bar', $xtraThatWasSet['foo']);
     }
-
 }

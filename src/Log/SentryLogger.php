@@ -1,32 +1,33 @@
 <?php
 
 /**
- * Class: SentryLogWriter.
+ * Class: SentryLogger.
  *
- * @author  Russell Michell 2017 <russ@theruss.com>
+ * @author  Russell Michell 2017-2019 <russ@theruss.com>
  * @package phptek/sentry
  */
 
 namespace PhpTek\Sentry\Log;
 
-use PhpTek\Sentry\Adaptor\RavenClient;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Backtrace;
+use SilverStripe\Security\Security;
+use SilverStripe\Core\Config\Configurable;
+use PhpTek\Sentry\Log\SentryLogger;
+use PhpTek\Sentry\Adaptor\SentryAdaptor;
 
 /**
- * The SentryLogWriter class simply acts as a bridge between the configured Sentry
- * adaptor and SilverStripe's {@link SS_Log}.
- *
- * Usage in your project's _config.php for example (See README for examples).
- *
- *    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), '<=');
+ * The SentryLogWriter class is a bridge between {@link SentryAdaptor} and
+ * SilverStripe's use of Monolog.
  */
-
 class SentryLogger
 {
+    use Configurable;
+    
     /**
-     * @var RavenClient
+     * @var SentryAdaptor
      */
     public $client = null;
 
@@ -46,40 +47,40 @@ class SentryLogger
      *                          for more detail.
      * @return SentryLogger
      */
-    public static function factory($config = [])
+    public static function factory(array $config = []) : SentryLogger
     {
-        $env = isset($config['env']) ? $config['env'] : null;
-        $tags = isset($config['tags']) ? $config['tags'] : [];
-        $extra = isset($config['extra']) ? $config['extra'] : [];
-        /** @var SentryLogger $logger */
-        $logger = Injector::inst()->create(__CLASS__);
+        $env = $config['env'] ?? [];
+        $user = $config['user'] ?? [];
+        $tags = $config['tags'] ?? [];
+        $extra = $config['extra'] ?? [];
+        // Set the minimum reporting level
+        $level = $config['level'] ?? self::config()->get('log_level');
+        $logger = Injector::inst()->create(static::class);
 
         // Set default environment
-        if (is_null($env)) {
-            $env = $logger->defaultEnv();
-        }
-
+        $env = $env ?: $logger->defaultEnv();
+        // Set any available user data
+        $user = $user ?: $logger->defaultUser();
         // Set any available tags available in SS config
         $tags = array_merge($logger->defaultTags(), $tags);
-
         // Set any available additional (extra) data
         $extra = array_merge($logger->defaultExtra(), $extra);
 
-        $logger->client->setData('env', $env);
-        $logger->client->setData('tags', $tags);
-        $logger->client->setData('extra', $extra);
+        $logger->adaptor->setData('env', $env);
+        $logger->adaptor->setData('tags', $tags);
+        $logger->adaptor->setData('extra', $extra);
+        $logger->adaptor->setData('user', $user);
+        $logger->adaptor->setData('level', $level);
 
         return $logger;
     }
 
     /**
-     * Used in unit tests.
-     *
-     * @return RavenClient
+     * @return SentryAdaptor
      */
-    public function getClient()
+    public function getAdaptor() : SentryAdaptor
     {
-        return $this->client;
+        return $this->adaptor;
     }
 
     /**
@@ -88,7 +89,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function defaultEnv()
+    public function defaultEnv() : string
     {
         return Director::get_environment_type();
     }
@@ -108,7 +109,7 @@ class SentryLogger
      *
      * @return array
      */
-    public function defaultTags()
+    public function defaultTags() : array
     {
         return [
             'Request-Method'=> $this->getReqMethod(),
@@ -126,7 +127,7 @@ class SentryLogger
      *
      * @return array
      */
-    public function defaultExtra()
+    public function defaultExtra() : array
     {
         return [
             'Peak-Memory'   => $this->getPeakMemory()
@@ -139,7 +140,7 @@ class SentryLogger
      * @param  string $pkg e.g. "silverstripe/framework"
      * @return string
      */
-    public function getPackageInfo($pkg)
+    public function getPackageInfo(string $pkg) : string
     {
         $lockFileJSON = BASE_PATH . '/composer.lock';
 
@@ -164,7 +165,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getRequestType()
+    public function getRequestType() : string
     {
         $isCLI = $this->getSAPI() !== 'cli';
         $isAjax = Director::is_ajax();
@@ -175,9 +176,9 @@ class SentryLogger
     /**
      * Return peak memory usage.
      *
-     * @return float
+     * @return string
      */
-    public function getPeakMemory()
+    public function getPeakMemory() : string
     {
         $peak = memory_get_peak_usage(true) / 1024 / 1024;
 
@@ -189,7 +190,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getUserAgent()
+    public function getUserAgent() : string
     {
         $ua = @$_SERVER['HTTP_USER_AGENT'];
 
@@ -205,7 +206,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getReqMethod()
+    public function getReqMethod() : string
     {
         $method = @$_SERVER['REQUEST_METHOD'];
 
@@ -219,7 +220,7 @@ class SentryLogger
     /**
      * @return string
      */
-    public function getSAPI()
+    public function getSAPI() : string
     {
         return php_sapi_name();
     }
@@ -230,13 +231,13 @@ class SentryLogger
 	 *
 	 * @return string
 	 */
-	public function getIP()
+	public function getIP() : string
     {
 		$headerOverrideIP = null;
 
 		if (defined('TRUSTED_PROXY')) {
 			$headers = (defined('SS_TRUSTED_PROXY_IP_HEADER')) ?
-                array(SS_TRUSTED_PROXY_IP_HEADER) :
+                [SS_TRUSTED_PROXY_IP_HEADER] :
                 null;
 
 			if(!$headers) {
@@ -265,5 +266,70 @@ class SentryLogger
 
         return '';
 	}
+
+    /**
+     * Returns a default set of additional data specific to the user's part in
+     * the request.
+     *
+     * @param  mixed Member|null $member
+     * @return array
+     */
+    public function defaultUser(Member $member = null) : array
+    {
+        if (!$member) {
+            $member = Security::getCurrentUser();
+        }
+        
+        return [
+            'IPAddress' => $this->getIP(),
+            'ID'       => $member ? $member->getField('ID') : self::SLW_NOOP,
+            'Email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
+        ];
+    }
+
+    /**
+     * Generate a cleaned-up backtrace of the event that got us here.
+     *
+     * @param  array $record
+     * @return array
+     * @todo   Unused in sentry-sdk 2.0??
+     */
+    public static function backtrace(array $record) : array
+    {
+        // Provided trace
+        if (!empty($record['context']['trace'])) {
+            return $record['context']['trace'];
+        }
+
+        // Generate trace from exception
+        if (isset($record['context']['exception'])) {
+            $exception = $record['context']['exception'];
+
+            return $exception->getTrace();
+        }
+
+        // Failover: build custom trace
+        $bt = debug_backtrace();
+
+        // Push current line into context
+        array_unshift($bt, [
+            'file'     => !empty($bt['file']) ? $bt['file'] : 'N/A',
+            'line'     => !empty($bt['line']) ? $bt['line'] : 'N/A',
+            'function' => '',
+            'class'    => '',
+            'type'     => '',
+            'args'     => [],
+        ]);
+
+       return Backtrace::filter_backtrace($bt, [
+            '',
+            'Monolog\\Handler\\AbstractProcessingHandler->handle',
+            'Monolog\\Logger->addRecord',
+            'Monolog\\Logger->log',
+            'Monolog\\Logger->warn',
+            'PhpTek\\Sentry\\Handler\\SentryMonologHandler->write',
+            'PhpTek\\Sentry\\Handler\\SentryMonologHandler->backtrace',
+        ]);
+    }
 
 }
