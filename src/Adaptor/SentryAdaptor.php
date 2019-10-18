@@ -12,10 +12,11 @@ namespace PhpTek\Sentry\Adaptor;
 use Sentry\State\Hub;
 use Sentry\ClientBuilder;
 use Sentry\State\Scope;
-use Sentry\Severity;
 use Sentry\ClientInterface;
+use Sentry\Severity;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
+use PhpTek\Sentry\Adaptor\SentrySeverity;
 
 /**
  * The SentryAdaptor provides a functionality bridge between the getsentry/sentry
@@ -50,6 +51,9 @@ class SentryAdaptor
     }
 
     /**
+     * Configures Sentry to display additional information about a SilverStripe
+     * application's runtime and context.
+     * 
      * @param  string $field
      * @param  mixed  $data
      * @return void
@@ -58,7 +62,7 @@ class SentryAdaptor
     public function setData(string $field, $data) : void
     {
         $options = Hub::getCurrent()->getClient()->getOptions();
-
+        
         switch ($field) {
             case 'env':
                 $options->setEnvironment($data);
@@ -84,37 +88,13 @@ class SentryAdaptor
                 break;
             case 'level':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
-                    $scope->setLevel(new Severity(strtolower($data)));
+                    $scope->setLevel(new Severity(SentrySeverity::process_severity($level = $data)));
                 });
                 break;
             default:
                 $msg = sprintf('Unknown field "%s" passed to %s().', $field, __FUNCTION__);
                 throw new SentryLogWriterException($msg);
         }
-    }
-
-    /**
-     * Simple getter for data set to / on the sentry client.
-     *
-     * @return array
-     */
-    public function getData() : array
-    {
-        $options = Hub::getCurrent()->getClient()->getOptions();
-        $data = [];
-
-        Hub::getCurrent()->configureScope(function (Scope $scope) use (&$data) : void {
-                $data['user'] = $scope->getUser();
-                $data['tags'] = $scope->getTags();
-                $data['extra'] = $scope->getExtra();
-        });
-
-        return [
-            'env'   => $options->getEnvironment(),
-            'tags'  => $data['tags'] ?? [],
-            'user'  => $data['user'] ?? [],
-            'extra' => $data['extra'] ?? [],
-        ];
     }
 
     /**
