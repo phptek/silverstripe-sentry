@@ -158,7 +158,7 @@ class SentryAdaptor
 
         // Env vars take precedence over YML config in array_merge()
         $opts = Injector::inst()
-            ->convertServiceProperty(array_merge($this->config()->get('opts'), $opts));
+            ->convertServiceProperty(array_merge($this->config()->get('opts') ?? [], $opts));
 
         // Deal with proxy settings. Raven_Client permits host:port format but SilverStripe's
         // YML config only permits single backtick-enclosed env/consts per config
