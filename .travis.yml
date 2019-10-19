@@ -19,9 +19,12 @@ matrix:
       env:
         - DB=MYSQL
 
+services:
+  - mysql
+
 before_script:
   - composer self-update || true
-  - composer require --no-update silverstripe/recipe-cms:1.1.x-dev
+  - composer require --no-update silverstripe/recipe-cms:^4
   - composer install --prefer-dist --no-interaction --no-progress --no-suggest --optimize-autoloader --verbose --profile
 
 script:
