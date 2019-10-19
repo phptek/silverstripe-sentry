@@ -27,17 +27,9 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 Add the Composer package as a dependency to your project:
 
-### SilverStripe 3
+    composer require phptek/sentry
 
-    composer require phptek/sentry: 1.x
-
-### SilverStripe 4
-
-    composer require phptek/sentry: 2.x
-
-    composer require phptek/sentry: 3.x
-
-Note that 2.x and 3.x should work with the same setups, the latter simply uses a
+Note that v2.x and v3.x should work with the same setups, the latter simply uses a
 newer version of the Sentry PHP SDK, and has a leaner codebase.
 
 Note that with 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor`,
@@ -48,6 +40,12 @@ Configure your application or site with the Sentry DSN into your project's YML c
 ### SilverStripe 4
 
 #### General Config ####
+
+You can set your DSN as a first-class environment variable or via your project's `.env` file:
+
+    SENTRY_DSN="http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44"
+
+Or you can set it in YML config, where you gain a little more flexibility and control:
 
 The following YML config will get you errors reported in all environment modes: `dev`, `test` and `live`: 
 

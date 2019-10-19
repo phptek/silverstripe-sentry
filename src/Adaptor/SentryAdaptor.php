@@ -16,6 +16,7 @@ use Sentry\ClientInterface;
 use Sentry\Severity;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Environment as Env;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
 
 /**
@@ -148,8 +149,16 @@ class SentryAdaptor
      */
     protected function getOpts(string $opt = '')
     {
-        // Extract env-vars from YML config
-        $opts = Injector::inst()->convertServiceProperty($this->config()->get('opts'));
+        $opts = [];
+        
+        // Extract env-vars from YML config or env
+        if ($dsn = Env::getEnv('SENTRY_DSN')) {
+            $opts['dsn'] = $dsn;
+        }
+
+        // Env vars take precedence over YML config in array_merge()
+        $opts = Injector::inst()
+            ->convertServiceProperty(array_merge($this->config()->get('opts'), $opts));
 
         // Deal with proxy settings. Raven_Client permits host:port format but SilverStripe's
         // YML config only permits single backtick-enclosed env/consts per config
