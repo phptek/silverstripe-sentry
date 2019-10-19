@@ -30,6 +30,14 @@ class SentryAdaptor
      * @var ClientInterface
      */
     protected $sentry;
+    
+    /**
+     * Internal storage for context. Used only in the case of non-exception
+     * data sent to Sentry.
+     * 
+     * @var array
+     */
+    protected $context = [];
 
     /**
      * @return void
@@ -51,7 +59,7 @@ class SentryAdaptor
     }
 
     /**
-     * Configures Sentry to display additional information about a SilverStripe
+     * Configures Sentry "context" to display additional information about a SilverStripe
      * application's runtime and context.
      * 
      * @param  string $field
@@ -59,30 +67,34 @@ class SentryAdaptor
      * @return void
      * @throws SentryLogWriterException
      */
-    public function setData(string $field, $data) : void
+    public function setContext(string $field, $data) : void
     {
         $options = Hub::getCurrent()->getClient()->getOptions();
         
         switch ($field) {
             case 'env':
                 $options->setEnvironment($data);
+                $this->context['env'] = $data;
                 break;
             case 'tags':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
                     foreach ($data as $tagName => $tagData) {
                         $scope->setTag($tagName, $tagData);
+                        $this->context['tags'][$tagName] = $tagData;
                     }
                 });
                 break;
             case 'user':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
                     $scope->setUser($data);
+                    $this->context['user'] = $data;
                 });
                 break;
             case 'extra':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
                     foreach ($data as $extraKey => $extraData) {
                         $scope->setExtra($extraKey, $extraData);
+                        $this->context['extra'][$extraKey] = $extraData;
                     }
                 });
                 break;
@@ -95,6 +107,36 @@ class SentryAdaptor
                 $msg = sprintf('Unknown field "%s" passed to %s().', $field, __FUNCTION__);
                 throw new SentryLogWriterException($msg);
         }
+    }
+    
+    /**
+     * Get _locally_ set contextual data, that we should be able to get from Sentry's
+     * current {@link Scope}.
+     * 
+     * Note: This (re) sets data to a new instance of {@link Scope} for passing to 
+     * captureMessage(). One would expect this to be set by default, as it is for
+     * $record data sent to Sentry via captureException(), but it isn't.
+     * 
+     * @todo Investigate sentry/php-sdk's API for alternative ways to handle "manual"
+     * logging, where data is not an exception and results in being passed to captureMessage().
+     * 
+     * @return Scope
+     */
+    public function getContext() : Scope
+    {
+        $scope = new Scope();
+
+        $scope->setUser($this->context['user']);
+        
+        foreach ($this->context['tags'] as $tagKey => $tagData) {
+            $scope->setTag($tagKey, $tagData);
+        }
+        
+        foreach ($this->context['extra'] as $extraKey => $extraData) {
+            $scope->setExtra($extraKey, $extraData);
+        }
+        
+        return $scope;
     }
 
     /**

@@ -12,6 +12,7 @@ namespace PhpTek\Sentry\Handler;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Sentry\Severity;
+use Sentry\State\Scope;
 use SilverStripe\Core\Injector\Injectable;
 use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
@@ -74,7 +75,8 @@ class SentryHandler extends AbstractProcessingHandler
         } else {
             $this->client->getSDK()->captureMessage(
                 $record['formatted'],
-                new Severity(SentrySeverity::process_severity($record['level_name']))
+                new Severity(SentrySeverity::process_severity($record['level_name'])),
+                $this->client->getContext()
             );
         }
     }
@@ -86,5 +88,13 @@ class SentryHandler extends AbstractProcessingHandler
     {
         return $this->client;
     }
-
+    
+    /**
+     * @return {@link Scope}
+     */
+    public function getMessageScope() : Scope
+    {
+        
+    }
+    
 }
