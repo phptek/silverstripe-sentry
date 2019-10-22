@@ -31,8 +31,8 @@ Add the Composer package as a dependency to your project:
 
 Notes:
 
-* That v2.x and v3.x should work with the same setups, the latter simply uses a newer version of the Sentry PHP SDK, and has a leaner codebase.
-* That with v3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor`, so your configuration will have to be updated accordingly.
+* Versions 2.x and 3.x should work with the same setups, the latter simply uses a newer version of the Sentry PHP SDK, and has a leaner codebase.
+* Version 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor`, so your existing configuration(s) will have to be updated accordingly.
 
 Configure your application or site with the Sentry DSN:
 
@@ -102,7 +102,25 @@ Should your app require outgoing traffic to be passed through an proxy, the foll
         host: '`MY_OUTBOUND_PROXY`'
         port: '`MY_OUTBOUND_PROXY_PORT`'
 
-Note: As per the examples above, ensure your project's Sentry config is set to come *after* the module's own config, thus:
+Notes: 
+
+* In 3.x you can silence errors from `Injector` where "test" and "live" envs have `http_proxy` set, but "dev" environments don't. Just set `null` as the value. This applies to all YML config where some envs have a setting and others don't. For example:
+
+```
+...
+    ---
+    Only:
+      environment: dev
+    ---
+    PhpTek\Sentry\Adaptor\SentryAdaptor:
+      opts:
+        dsn: null
+        http_proxy: null
+    ---
+...
+```
+
+* As per the examples above, ensure your project's Sentry config is set to come *after* the module's own config, thus:
 
     After:
       - 'sentry-config'
