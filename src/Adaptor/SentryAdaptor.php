@@ -9,11 +9,13 @@
 
 namespace PhpTek\Sentry\Adaptor;
 
+use PhpTek\Sentry\Log\SentryLogger;
 use Sentry\State\Hub;
 use Sentry\ClientBuilder;
 use Sentry\State\Scope;
 use Sentry\ClientInterface;
 use Sentry\Severity;
+use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Environment as Env;
@@ -31,11 +33,11 @@ class SentryAdaptor
      * @var ClientInterface
      */
     protected $sentry;
-    
+
     /**
      * Internal storage for context. Used only in the case of non-exception
      * data sent to Sentry.
-     * 
+     *
      * @var array
      */
     protected $context = [];
@@ -46,6 +48,7 @@ class SentryAdaptor
     public function __construct()
     {
         $client = ClientBuilder::create($this->getOpts() ?: [])->getClient();
+        $client->getOptions()->setRelease(SentryLogger::getGitHead($client));
         Hub::setCurrent(new Hub($client));
 
         $this->sentry = $client;
@@ -62,7 +65,7 @@ class SentryAdaptor
     /**
      * Configures Sentry "context" to display additional information about a SilverStripe
      * application's runtime and context.
-     * 
+     *
      * @param  string $field
      * @param  mixed  $data
      * @return void
@@ -71,7 +74,7 @@ class SentryAdaptor
     public function setContext(string $field, $data) : void
     {
         $options = Hub::getCurrent()->getClient()->getOptions();
-        
+
         switch ($field) {
             case 'env':
                 $options->setEnvironment($data);
@@ -109,18 +112,18 @@ class SentryAdaptor
                 throw new SentryLogWriterException($msg);
         }
     }
-    
+
     /**
      * Get _locally_ set contextual data, that we should be able to get from Sentry's
      * current {@link Scope}.
-     * 
-     * Note: This (re) sets data to a new instance of {@link Scope} for passing to 
+     *
+     * Note: This (re) sets data to a new instance of {@link Scope} for passing to
      * captureMessage(). One would expect this to be set by default, as it is for
      * $record data sent to Sentry via captureException(), but it isn't.
-     * 
+     *
      * @todo Investigate sentry/php-sdk's API for alternative ways to handle "manual"
      * logging, where data is not an exception and results in being passed to captureMessage().
-     * 
+     *
      * @return Scope
      */
     public function getContext() : Scope
@@ -128,15 +131,15 @@ class SentryAdaptor
         $scope = new Scope();
 
         $scope->setUser($this->context['user']);
-        
+
         foreach ($this->context['tags'] as $tagKey => $tagData) {
             $scope->setTag($tagKey, $tagData);
         }
-        
+
         foreach ($this->context['extra'] as $extraKey => $extraData) {
             $scope->setExtra($extraKey, $extraData);
         }
-        
+
         return $scope;
     }
 
@@ -150,7 +153,7 @@ class SentryAdaptor
     protected function getOpts(string $opt = '')
     {
         $opts = [];
-        
+
         // Extract env-vars from YML config or env
         if ($dsn = Env::getEnv('SENTRY_DSN')) {
             $opts['dsn'] = $dsn;

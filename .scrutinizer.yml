@@ -1,5 +1,5 @@
 inherit: true
+checks:
+  php: true
 filter:
-  excluded_paths:
-    - tests/*
-    - docs/*
+  paths: ["src/*"]

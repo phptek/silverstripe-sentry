@@ -15,7 +15,6 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\Backtrace;
 use SilverStripe\Security\Security;
 use SilverStripe\Core\Config\Configurable;
-use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
 
 /**
@@ -25,7 +24,7 @@ use PhpTek\Sentry\Adaptor\SentryAdaptor;
 class SentryLogger
 {
     use Configurable;
-    
+
     /**
      * @var SentryAdaptor
      */
@@ -42,12 +41,12 @@ class SentryLogger
     /**
      * A static constructor as per {@link Zend_Log_FactoryInterface}.
      *
-     * @param  array $config    An array of optional additional configuration for
+     * @param array $config An array of optional additional configuration for
      *                          passing custom information to Sentry. See the README
      *                          for more detail.
      * @return SentryLogger
      */
-    public static function factory(array $config = []) : SentryLogger
+    public static function factory(array $config = []): SentryLogger
     {
         $env = $config['env'] ?? [];
         $user = $config['user'] ?? [];
@@ -78,7 +77,7 @@ class SentryLogger
     /**
      * @return SentryAdaptor
      */
-    public function getAdaptor() : SentryAdaptor
+    public function getAdaptor(): SentryAdaptor
     {
         return $this->adaptor;
     }
@@ -89,7 +88,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function defaultEnv() : string
+    public function defaultEnv(): string
     {
         return Director::get_environment_type();
     }
@@ -109,13 +108,13 @@ class SentryLogger
      *
      * @return array
      */
-    public function defaultTags() : array
+    public function defaultTags(): array
     {
         return [
-            'Request-Method'=> $this->getReqMethod(),
-            'Request-Type'  => $this->getRequestType(),
-            'SAPI'          => $this->getSAPI(),
-            'SS-Version'    => $this->getPackageInfo('silverstripe/framework')
+            'Request-Method' => $this->getReqMethod(),
+            'Request-Type'   => $this->getRequestType(),
+            'SAPI'           => $this->getSAPI(),
+            'SS-Version'     => $this->getPackageInfo('silverstripe/framework')
         ];
     }
 
@@ -127,20 +126,22 @@ class SentryLogger
      *
      * @return array
      */
-    public function defaultExtra() : array
+    public function defaultExtra(): array
     {
-        return [
-            'Peak-Memory'   => $this->getPeakMemory()
-        ];
+        $return = $this->getGitInfo();
+        $return['Peak-Memory'] = $this->getPeakMemory();
+
+        return $return;
     }
+
 
     /**
      * Return the version of $pkg taken from composer.lock.
      *
-     * @param  string $pkg e.g. "silverstripe/framework"
+     * @param string $pkg e.g. "silverstripe/framework"
      * @return string
      */
-    public function getPackageInfo(string $pkg) : string
+    public function getPackageInfo(string $pkg): string
     {
         $lockFileJSON = BASE_PATH . '/composer.lock';
 
@@ -165,7 +166,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getRequestType() : string
+    public function getRequestType(): string
     {
         $isCLI = $this->getSAPI() !== 'cli';
         $isAjax = Director::is_ajax();
@@ -178,11 +179,11 @@ class SentryLogger
      *
      * @return string
      */
-    public function getPeakMemory() : string
+    public function getPeakMemory(): string
     {
         $peak = memory_get_peak_usage(true) / 1024 / 1024;
 
-        return (string) round($peak, 2) . 'Mb';
+        return (string)round($peak, 2) . 'Mb';
     }
 
     /**
@@ -190,7 +191,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getUserAgent() : string
+    public function getUserAgent(): string
     {
         $ua = @$_SERVER['HTTP_USER_AGENT'];
 
@@ -206,7 +207,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getReqMethod() : string
+    public function getReqMethod(): string
     {
         $method = @$_SERVER['REQUEST_METHOD'];
 
@@ -220,81 +221,81 @@ class SentryLogger
     /**
      * @return string
      */
-    public function getSAPI() : string
+    public function getSAPI(): string
     {
         return php_sapi_name();
     }
 
- 	/**
-	 * Returns the client IP address which originated this request.
+    /**
+     * Returns the client IP address which originated this request.
      * Lifted and modified from SilverStripe 3's SS_HTTPRequest.
-	 *
-	 * @return string
-	 */
-	public function getIP() : string
+     *
+     * @return string
+     */
+    public function getIP(): string
     {
-		$headerOverrideIP = null;
+        $headerOverrideIP = null;
 
-		if (defined('TRUSTED_PROXY')) {
-			$headers = (defined('SS_TRUSTED_PROXY_IP_HEADER')) ?
+        if (defined('TRUSTED_PROXY')) {
+            $headers = (defined('SS_TRUSTED_PROXY_IP_HEADER')) ?
                 [SS_TRUSTED_PROXY_IP_HEADER] :
                 null;
 
-			if(!$headers) {
-				// Backwards compatible defaults
-				$headers = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR'];
-			}
+            if (!$headers) {
+                // Backwards compatible defaults
+                $headers = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR'];
+            }
 
-			foreach($headers as $header) {
-				if(!empty($_SERVER[$header])) {
-					$headerOverrideIP = $_SERVER[$header];
+            foreach ($headers as $header) {
+                if (!empty($_SERVER[$header])) {
+                    $headerOverrideIP = $_SERVER[$header];
 
-					break;
-				}
-			}
-		}
+                    break;
+                }
+            }
+        }
 
         $proxy = Injector::inst()->create(TrustedProxyMiddleware::class);
 
-		if ($headerOverrideIP) {
-			return $proxy->getIPFromHeaderValue($headerOverrideIP);
-		}
+        if ($headerOverrideIP) {
+            return $proxy->getIPFromHeaderValue($headerOverrideIP);
+        }
 
         if (isset($_SERVER['REMOTE_ADDR'])) {
-			return $_SERVER['REMOTE_ADDR'];
-		}
+            return $_SERVER['REMOTE_ADDR'];
+        }
 
         return '';
-	}
+    }
 
     /**
      * Returns a default set of additional data specific to the user's part in
      * the request.
      *
-     * @param  mixed Member|null $member
+     * @param mixed Member|null $member
      * @return array
      */
-    public function defaultUser(Member $member = null) : array
+    public function defaultUser(Member $member = null): array
     {
         if (!$member) {
             $member = Security::getCurrentUser();
         }
-        
+
         return [
             'IPAddress' => $this->getIP() ?: self::SLW_NOOP,
-            'ID'       => $member ? $member->getField('ID') : self::SLW_NOOP,
-            'Email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
+            'ID'        => $member ? $member->getField('ID') : self::SLW_NOOP,
+            'Email'     => $member ? $member->getField('Email') : self::SLW_NOOP,
         ];
     }
 
     /**
      * Generate a cleaned-up backtrace of the event that got us here.
      *
-     * @param  array $record
+     * @param array $record
      * @return array
      * @todo   Unused in sentry-sdk 2.0??
      */
-    public static function backtrace(array $record) : array
+    public static function backtrace(array $record): array
     {
         // Provided trace
         if (!empty($record['context']['trace'])) {
@@ -321,7 +322,7 @@ class SentryLogger
             'args'     => [],
         ]);
 
-       return Backtrace::filter_backtrace($bt, [
+        return Backtrace::filter_backtrace($bt, [
             '',
             'Monolog\\Handler\\AbstractProcessingHandler->handle',
             'Monolog\\Logger->addRecord',
@@ -330,6 +331,82 @@ class SentryLogger
             'PhpTek\\Sentry\\Handler\\SentryMonologHandler->write',
             'PhpTek\\Sentry\\Handler\\SentryMonologHandler->backtrace',
         ]);
+    }
+
+    /**
+     * Get the information about the current release, if possible
+     * @return array
+     */
+    protected function getGitInfo()
+    {
+        // Initialise empty array to return
+        $return = [];
+        // If the file operations error out, we need to catch it
+        try {
+            $return = $this->getGitCommitMessage($return);
+        } catch (\Exception $exception) {
+            // Default message. As it's an extra, it's not overly crowding the interface
+            $return['Message'] = 'No git repo found or inaccessible';
+        }
+
+        return $return;
+    }
+
+    /**
+     * Get the HEAD tag or the release
+     *
+     * @return string
+     */
+    public static function getGitHead()
+    {
+        $head = file_exists(Director::baseFolder() . '/.git/HEAD');
+        if ($head) {
+            $head = explode(':', file_get_contents(Director::baseFolder() . '/.git/HEAD'));
+            $ref = file_get_contents(Director::baseFolder() . '/.git/' . trim($head[1]));
+            $ref = self::getGitTag($ref);
+            return $ref;
+        }
+
+        return '';
+    }
+
+    /**
+     * Check if we are on a tagged release and if so, use that to set the client release
+     * @param $ref
+     * @return mixed
+     */
+    protected static function getGitTag($ref)
+    {
+        $data = file_get_contents(Director::baseFolder() . './git/packed-refs');
+        if ($data) {
+            $data = explode('\n', $data);
+            foreach ($data as $line) {
+                if (strpos($line, '#') !== false) {
+                    continue;
+                }
+                $tags = explode(' ', $line);
+                if ($tags[0] === $ref) {
+                    list(,,$tag) = explode('/', $ref[1]);
+                    return $tag;
+                }
+            }
+        }
+
+        return $ref;
+    }
+
+    /**
+     * @param array $return
+     * @return array
+     */
+    protected function getGitCommitMessage(array $return): array
+    {
+        $msgFile = file_exists(Director::baseFolder() . '/.git/COMMIT_EDITMSG');
+        if ($msgFile) {
+            $return['Message'] = file_get_contents(Director::baseFolder() . '/.git/COMMIT_EDITMSG');
+        }
+
+        return $return;
     }
 
 }
