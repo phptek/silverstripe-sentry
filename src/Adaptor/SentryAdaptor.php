@@ -48,7 +48,7 @@ class SentryAdaptor
     public function __construct()
     {
         $client = ClientBuilder::create($this->getOpts() ?: [])->getClient();
-        $client->getOptions()->setRelease(SentryLogger::getGitHead($client));
+        $client->getOptions()->setRelease(SentryLogger::getGitHead());
         Hub::setCurrent(new Hub($client));
 
         $this->sentry = $client;
