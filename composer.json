@@ -3,7 +3,7 @@
     "type": "silverstripe-vendormodule",
     "license": "BSD-3-Clause",
     "description": "Sentry.io integration for SilverStripe. Binds Sentry.io to SilverStripe's error & exception handling subsystem.",
-    "keywords": ["silverstripe", "sentry", "logging", "logs", "log", "raven", "exception", "error"],
+    "keywords": ["silverstripe", "sentry", "logging", "logs", "log", "exception", "error"],
     "authors": [{
         "name": "Russell Michell",
         "homepage": "http://theruss.com/"
@@ -13,12 +13,12 @@
     },
     "require": {
         "php": ">=7.0",
-        "sentry/sdk": "^2.0",
+        "sentry/sdk": "^2",
         "monolog/monolog": "^1.24.0",
         "silverstripe/framework": "^4"
     },
     "require-dev": {
-        "phpunit/PHPUnit": "^5.7"
+        "phpunit/phpunit": "^5.7"
     },
     "config": {
         "process-timeout": 900

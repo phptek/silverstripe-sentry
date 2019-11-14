@@ -66,11 +66,11 @@ class SentryLogger
         // Set any available additional (extra) data
         $extra = array_merge($logger->defaultExtra(), $extra);
 
-        $logger->adaptor->setData('env', $env);
-        $logger->adaptor->setData('tags', $tags);
-        $logger->adaptor->setData('extra', $extra);
-        $logger->adaptor->setData('user', $user);
-        $logger->adaptor->setData('level', $level);
+        $logger->adaptor->setContext('env', $env);
+        $logger->adaptor->setContext('tags', $tags);
+        $logger->adaptor->setContext('extra', $extra);
+        $logger->adaptor->setContext('user', $user);
+        $logger->adaptor->setContext('level', $level);
 
         return $logger;
     }
@@ -281,7 +281,7 @@ class SentryLogger
         }
         
         return [
-            'IPAddress' => $this->getIP(),
+            'IPAddress' => $this->getIP() ?: self::SLW_NOOP,
             'ID'       => $member ? $member->getField('ID') : self::SLW_NOOP,
             'Email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
         ];

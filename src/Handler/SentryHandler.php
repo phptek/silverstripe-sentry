@@ -12,9 +12,11 @@ namespace PhpTek\Sentry\Handler;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Sentry\Severity;
+use Sentry\State\Scope;
 use SilverStripe\Core\Injector\Injectable;
 use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
+use PhpTek\Sentry\Adaptor\SentrySeverity;
 
 /**
  * Monolog handler to send messages to a Sentry (https://github.com/getsentry/sentry) server
@@ -22,6 +24,7 @@ use PhpTek\Sentry\Adaptor\SentryAdaptor;
  */
 class SentryHandler extends AbstractProcessingHandler
 {
+
     use Injectable;
 
     /**
@@ -36,7 +39,7 @@ class SentryHandler extends AbstractProcessingHandler
         $logger = SentryLogger::factory($extras);
         $this->client = $logger->getAdaptor();
 
-        parent::__construct($this->client->getSDK(), $level, $bubble);
+        parent::__construct($level, $bubble);
     }
 
     /**
@@ -60,20 +63,24 @@ class SentryHandler extends AbstractProcessingHandler
     protected function write(array $record) : void
     {
         $record = array_merge($record, [
-            'timestamp'  => $record['datetime']->getTimestamp(),
+            'timestamp' => $record['datetime']->getTimestamp(),
             'stacktrace' => SentryLogger::backtrace($record),
         ]);
 
         if (
                 isset($record['context']['exception']) &&
                 $record['context']['exception'] instanceof \Throwable
-            ) {
+        ) {
             $this->client->getSDK()->captureException($record['context']['exception']);
         } else {
-            $this->client->getSDK()->captureMessage($record['formatted'], new Severity(strtolower($record['level_name'])));
+            $this->client->getSDK()->captureMessage(
+                $record['formatted'],
+                new Severity(SentrySeverity::process_severity($record['level_name'])),
+                $this->client->getContext()
+            );
         }
     }
-    
+
     /**
      * @return SentryAdaptor
      */
@@ -81,4 +88,13 @@ class SentryHandler extends AbstractProcessingHandler
     {
         return $this->client;
     }
+    
+    /**
+     * @return {@link Scope}
+     */
+    public function getMessageScope() : Scope
+    {
+        
+    }
+    
 }

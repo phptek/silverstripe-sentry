@@ -12,43 +12,33 @@ namespace PhpTek\Sentry\Adaptor;
 use Sentry\State\Hub;
 use Sentry\ClientBuilder;
 use Sentry\State\Scope;
-use Sentry\Severity;
 use Sentry\ClientInterface;
+use Sentry\Severity;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Environment as Env;
+use PhpTek\Sentry\Adaptor\SentrySeverity;
 
 /**
- * The SentryAdaptor provides functionality bridge between the PHP SDK and
- * {@link SentryLogger} itself.
+ * The SentryAdaptor provides a functionality bridge between the getsentry/sentry
+ * PHP SDK and {@link SentryLogger} itself.
  */
 class SentryAdaptor
 {
     use Configurable;
-    
-    /**
-     * It's an ERROR unless proven otherwise!
-     *
-     * @var    string
-     * @config
-     */
-    private static $default_error_level = 'ERR';
 
     /**
      * @var ClientInterface
      */
     protected $sentry;
-        
+    
     /**
-     * A mapping of log-level values between Zend_Log => Raven_Client
-     *
+     * Internal storage for context. Used only in the case of non-exception
+     * data sent to Sentry.
+     * 
      * @var array
      */
-    protected $logLevels = [
-        'NOTICE' => Severity::INFO,
-        'WARN'   => Severity::WARNING,
-        'ERR'    => Severity::ERROR,
-        'EMERG'  => Severity::FATAL
-    ];
+    protected $context = [];
 
     /**
      * @return void
@@ -70,41 +60,48 @@ class SentryAdaptor
     }
 
     /**
+     * Configures Sentry "context" to display additional information about a SilverStripe
+     * application's runtime and context.
+     * 
      * @param  string $field
      * @param  mixed  $data
      * @return void
      * @throws SentryLogWriterException
      */
-    public function setData(string $field, $data) : void
+    public function setContext(string $field, $data) : void
     {
         $options = Hub::getCurrent()->getClient()->getOptions();
-
+        
         switch ($field) {
             case 'env':
                 $options->setEnvironment($data);
+                $this->context['env'] = $data;
                 break;
             case 'tags':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
                     foreach ($data as $tagName => $tagData) {
                         $scope->setTag($tagName, $tagData);
+                        $this->context['tags'][$tagName] = $tagData;
                     }
                 });
                 break;
             case 'user':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
                     $scope->setUser($data);
+                    $this->context['user'] = $data;
                 });
                 break;
             case 'extra':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
                     foreach ($data as $extraKey => $extraData) {
                         $scope->setExtra($extraKey, $extraData);
+                        $this->context['extra'][$extraKey] = $extraData;
                     }
                 });
                 break;
             case 'level':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
-                    $scope->setLevel($data);
+                    $scope->setLevel(new Severity(SentrySeverity::process_severity($level = $data)));
                 });
                 break;
             default:
@@ -112,40 +109,35 @@ class SentryAdaptor
                 throw new SentryLogWriterException($msg);
         }
     }
-
+    
     /**
-     * Simple getter for data set to / on the sentry client.
-     *
-     * @return array
+     * Get _locally_ set contextual data, that we should be able to get from Sentry's
+     * current {@link Scope}.
+     * 
+     * Note: This (re) sets data to a new instance of {@link Scope} for passing to 
+     * captureMessage(). One would expect this to be set by default, as it is for
+     * $record data sent to Sentry via captureException(), but it isn't.
+     * 
+     * @todo Investigate sentry/php-sdk's API for alternative ways to handle "manual"
+     * logging, where data is not an exception and results in being passed to captureMessage().
+     * 
+     * @return Scope
      */
-    public function getData() : array
+    public function getContext() : Scope
     {
-        $options = Hub::getCurrent()->getClient()->getOptions();
-        $data = [];
-        
-        Hub::getCurrent()->configureScope(function (Scope $scope) use (&$data) : void {
-                $data['user'] = $scope->getUser();
-                $data['tags'] = $scope->getTags();
-                $data['extra'] = $scope->getExtra();
-        });
-        
-        return [
-            'env'   => $options->getEnvironment(),
-            'tags'  => $data['tags'] ?? [],
-            'user'  => $data['user'] ?? [],
-            'extra' => $data['extra'] ?? [],
-        ];
-    }
+        $scope = new Scope();
 
-    /**
-     * @param  string $level
-     * @return string
-     */
-    public function getLevel(string $level) : string
-    {
-        return isset($this->logLevels[$level]) ?
-            $this->logLevels[$level] :
-            $this->logLevels[self::$default_error_level];
+        $scope->setUser($this->context['user']);
+        
+        foreach ($this->context['tags'] as $tagKey => $tagData) {
+            $scope->setTag($tagKey, $tagData);
+        }
+        
+        foreach ($this->context['extra'] as $extraKey => $extraData) {
+            $scope->setExtra($extraKey, $extraData);
+        }
+        
+        return $scope;
     }
 
     /**
@@ -157,8 +149,16 @@ class SentryAdaptor
      */
     protected function getOpts(string $opt = '')
     {
-        // Extract env-vars from YML config
-        $opts = Injector::inst()->convertServiceProperty($this->config()->get('opts'));
+        $opts = [];
+        
+        // Extract env-vars from YML config or env
+        if ($dsn = Env::getEnv('SENTRY_DSN')) {
+            $opts['dsn'] = $dsn;
+        }
+
+        // Env vars take precedence over YML config in array_merge()
+        $opts = Injector::inst()
+            ->convertServiceProperty(array_merge($this->config()->get('opts') ?? [], $opts));
 
         // Deal with proxy settings. Raven_Client permits host:port format but SilverStripe's
         // YML config only permits single backtick-enclosed env/consts per config
