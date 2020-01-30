@@ -87,7 +87,7 @@ class SentryAdaptor
                 break;
             case 'user':
                 Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
-                    $scope->setUser($data);
+                    $scope->setUser($data, true);
                     $this->context['user'] = $data;
                 });
                 break;
