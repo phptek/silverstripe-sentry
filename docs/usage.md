@@ -1,12 +1,12 @@
 # Usage
 
-Once setup, everytime an `Exception` is thrown or PHP itself shuts down via `trigger_error()` etc, all
-available data is automatically sent to Sentry.
+Once setup, everytime an `Exception` is thrown or PHP itself shuts down via `trigger_error()` etc or you "manually" trigger a log message to be sent to Sentry, all
+available data is automatically sent.
 
 In addition to the module simply reporting all thrown `Exception`s, resulting in a stacktrace in Sentry itself, you can use Sentry as a simple logger
 with all the benefits of Sentry's tags and grouping. See the examples below.
 
-## Basic
+## Manual Logging
 
 ### SilverStripe 3
 
@@ -20,7 +20,7 @@ Nothing to do, the logger is registered via YML config as a Monolog Handler with
 
 ## Set an environment
 
-For "manual" error-reporting, you can augment your message with Sentry's "tags". If an environment is not specified,
+For "manual" error-reporting, you can augment your message with some context. If an environment is not specified,
 the default is to use the return value of `Director::get_environment_type()`.
 
 ### SilverStripe 3
@@ -30,8 +30,7 @@ the default is to use the return value of `Director::get_environment_type()`.
 
 ### SilverStripe 4
 
-SilverStripe 4 uses `Monolog` and individual handlers for logging. Once you instantiate a
-`Logger` object, you have access to `Monolog`'s public API.
+SilverStripe 4 uses `Monolog` and individual handlers for logging. Once you instantiate a `Logger` object, you have access to `Monolog`'s public API.
     
     $config = ['env' => 'live'];
     $logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
@@ -39,8 +38,10 @@ SilverStripe 4 uses `Monolog` and individual handlers for logging. Once you inst
 
     // Send an `ERROR` level message
     $logger->error($message, $config);
+
     // Send a `WARN` level message
     $logger->warning($message, $config);
+
     // Send an `INFO` level message
     $logger->info($message, $config);
 
@@ -77,8 +78,10 @@ instead.
 
     // Send an `ERROR` level message
     $logger->error($message, $config);
+
     // Send a `WARN` level message
     $logger->warning($message, $config);
+
     // Send an `INFO` level message
     $logger->info($message, $config);
 

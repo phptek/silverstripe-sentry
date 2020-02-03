@@ -4,11 +4,11 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/phptek/silverstripe-sentry/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/phptek/silverstripe-sentry/?branch=master)
 [![License](https://poser.pugx.org/phptek/sentry/license.svg)](https://github.com/phptek/silverstripe-sentry/blob/master/LICENSE.md)
 
-[Sentry](https://sentry.io) is an error and exception aggregation service. It takes your application's errors and stores them for later analysis and debugging. 
+[Sentry](https://sentry.io) is an error and exception aggregation service. It takes your application's errors, aggregates them alongside configurable context and stores them for later analysis and debugging. 
 
-Imagine this: You see exceptions before your client does. This means the error > report > debug > patch > deploy cycle is the most efficient it can possibly be.
+Imagine this: You see errors and exceptions before your clients do. The error > report > debug > patch > deploy cycle is therefore the most efficient it can possibly be.
 
-This module binds Sentry.io and locally-hosted Sentry installations, to the error & exception handler of SilverStripe. If you've used systems like 
+This module binds Sentry.io and hosted Sentry installations, to the Monlog error logger in SilverStripe. If you've used systems like 
 [RayGun](https://raygun.com), [Rollbar](https://rollbar.com), [AirBrake](https://airbrake.io/) and [BugSnag](https://www.bugsnag.com/) before, you'll know roughly what to expect.
 
 ## Requirements
@@ -29,13 +29,12 @@ Add the Composer package as a dependency to your project:
 
     composer require phptek/sentry
 
-Note that v2.x and v3.x should work with the same setups, the latter simply uses a
-newer version of the Sentry PHP SDK, and has a leaner codebase.
+Notes:
 
-Note that with 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor`,
-meaning your configuration will have to be updated accordingly.
+* Versions 2.x and 3.x should work with the same setups, the latter simply uses a newer version of the Sentry PHP SDK, and has a leaner codebase.
+* Version 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor`, so your existing configuration(s) will have to be updated accordingly.
 
-Configure your application or site with the Sentry DSN into your project's YML config:
+Configure your application or site with the Sentry DSN:
 
 ### SilverStripe 4
 
@@ -47,7 +46,7 @@ You can set your DSN as a first-class environment variable or via your project's
 
 Or you can set it in YML config, where you gain a little more flexibility and control:
 
-The following YML config will get you errors reported in all environment modes: `dev`, `test` and `live`: 
+The following will get you errors reported in all environment modes: `dev`, `test` and `live`: 
 
     ---
     Name: my-project-config-sentry
@@ -62,13 +61,14 @@ The following YML config will get you errors reported in all environment modes: 
 
 #### Conditional Config ####
 
-The following YML config will get you errors reported just in `test` and `live` but not `dev`: 
+The following will get you errors reported just in `test` and `live` but not `dev`: 
 
     ---
     Name: my-project-config-sentry
     After:
       - 'sentry-config'
     ---
+
     Only:
       environment: test
     ---
@@ -95,31 +95,45 @@ The following YML config will get you errors reported just in `test` and `live` 
 
 #### Proxies ####
 
-Should your app require outgoing traffic to be passed through a proxy, the following config
-will work.
+Should your app require outgoing traffic to be passed through an proxy, the following config will work:
 
     # Proxy constants
       http_proxy:
         host: '`MY_OUTBOUND_PROXY`'
         port: '`MY_OUTBOUND_PROXY_PORT`'
 
-Note: As per the examles above, ensure your project's Sentry config is set to come *after* the module's own config, thus:
+Notes: 
+
+* In 3.x you can silence errors from `Injector` where "test" and "live" envs have `http_proxy` set, but "dev" environments don't. Just set `null` as the value. This applies to all YML config where some envs have a setting and others don't. For example:
+
+```
+...
+    ---
+    Only:
+      environment: dev
+    ---
+    PhpTek\Sentry\Adaptor\SentryAdaptor:
+      opts:
+        dsn: null
+        http_proxy: null
+    ---
+...
+```
+
+* As per the examples above, ensure your project's Sentry config is set to come *after* the module's own config, thus:
 
     After:
       - 'sentry-config'
 
 #### Log Level ####
 
-You can set the minimum log-level you're interested in, using the `log_level` config:
+You can set the minimum log-level you're interested in, using the `log_level` config, the module default is to report anything more severe than a `WARNING`:
 
 ```
 PhpTek\Sentry\Log\SentryLogger:
   # One of the permitted severities: DEBUG|INFO|WARNING|ERROR|FATAL
   log_level: WARNING
 ```
-
-If you're interested to know how Sentry itself maps its own categories of message to
-PHP's internals, see the `fromError()` method here: https://github.com/getsentry/sentry-php/blob/master/src/Severity.php
 
 ### SilverStripe 3
 
@@ -131,14 +145,6 @@ PHP's internals, see the `fromError()` method here: https://github.com/getsentry
 ## Usage
 
 Sentry is normally setup once in your project's YML config or `_config.php` file. See the above examples and the [usage docs](docs/usage.md) for details and options.
-
-## Known Issues
-
-The stacktrace in SilverStripe 4 also sometimes includes the stacktrace of sentry itself! (See #26).
-
-## TODO
-
-See the [TODO docs](docs/todo.md) for more.
 
 ## Support Me
 
