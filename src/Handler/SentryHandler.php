@@ -62,6 +62,8 @@ class SentryHandler extends AbstractProcessingHandler
      */
     protected function write(array $record) : void
     {
+        // TODO $record['stacktrace'] is never actually sent anywhere. As such,
+        // we cannot clean-up the class::methods that we'd like to.
         $record = array_merge($record, [
             'timestamp' => $record['datetime']->getTimestamp(),
             'stacktrace' => SentryLogger::backtrace($record),
@@ -71,8 +73,14 @@ class SentryHandler extends AbstractProcessingHandler
                 isset($record['context']['exception']) &&
                 $record['context']['exception'] instanceof \Throwable
         ) {
-            $this->client->getSDK()->captureException($record['context']['exception']);
+            $this->client->getSDK()->captureException(
+                $record['context']['exception'],
+                $this->client->getContext()
+            );
         } else {
+            // Note: We are setting Sentry\Options::setAttachStacktrace(true) in
+            // SentryAdaptor and therefore have no control over cleaning-up the exceptions
+            // it produces
             $this->client->getSDK()->captureMessage(
                 $record['formatted'],
                 new Severity(SentrySeverity::process_severity($record['level_name'])),
@@ -88,13 +96,5 @@ class SentryHandler extends AbstractProcessingHandler
     {
         return $this->client;
     }
-    
-    /**
-     * @return {@link Scope}
-     */
-    public function getMessageScope() : Scope
-    {
-        
-    }
-    
+
 }
