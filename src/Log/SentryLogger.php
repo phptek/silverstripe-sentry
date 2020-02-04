@@ -25,7 +25,7 @@ use PhpTek\Sentry\Adaptor\SentryAdaptor;
 class SentryLogger
 {
     use Configurable;
-    
+
     /**
      * @var SentryAdaptor
      */
@@ -279,7 +279,7 @@ class SentryLogger
         if (!$member) {
             $member = Security::getCurrentUser();
         }
-        
+
         return [
             'IPAddress' => $this->getIP() ?: self::SLW_NOOP,
             'ID'       => $member ? $member->getField('ID') : self::SLW_NOOP,
@@ -288,47 +288,45 @@ class SentryLogger
     }
 
     /**
-     * Generate a cleaned-up backtrace of the event that got us here.
+     * Manually extract or generate a suitable backtrace. This is especially useful
+     * in non-exception reports such as those that use Sentry\Client::captureMessage().
      *
      * @param  array $record
      * @return array
-     * @todo   Unused in sentry-sdk 2.0??
      */
     public static function backtrace(array $record) : array
     {
-        // Provided trace
         if (!empty($record['context']['trace'])) {
-            return $record['context']['trace'];
+            // Provided trace
+            $bt = $record['context']['trace'];
+        } elseif (isset($record['context']['exception'])) {
+            // Generate trace from exception
+            $bt = $record['context']['exception']->getTrace();
+        } else {
+            // Failover: build custom trace
+            $bt = debug_backtrace();
+
+            // Push current line into context
+            array_unshift($bt, [
+                'file'     => $bt['file'] ?? 'N/A',
+                'line'     => $bt['line'] ?? 'N/A',
+                'function' => '',
+                'class'    => '',
+                'type'     => '',
+                'args'     => [],
+            ]);
         }
 
-        // Generate trace from exception
-        if (isset($record['context']['exception'])) {
-            $exception = $record['context']['exception'];
-
-            return $exception->getTrace();
-        }
-
-        // Failover: build custom trace
-        $bt = debug_backtrace();
-
-        // Push current line into context
-        array_unshift($bt, [
-            'file'     => !empty($bt['file']) ? $bt['file'] : 'N/A',
-            'line'     => !empty($bt['line']) ? $bt['line'] : 'N/A',
-            'function' => '',
-            'class'    => '',
-            'type'     => '',
-            'args'     => [],
-        ]);
-
-       return Backtrace::filter_backtrace($bt, [
+        // Regardless of where it came from, filter the exception
+        return Backtrace::filter_backtrace($bt, [
             '',
             'Monolog\\Handler\\AbstractProcessingHandler->handle',
             'Monolog\\Logger->addRecord',
+            'Monolog\\Logger->error',
             'Monolog\\Logger->log',
             'Monolog\\Logger->warn',
-            'PhpTek\\Sentry\\Handler\\SentryMonologHandler->write',
-            'PhpTek\\Sentry\\Handler\\SentryMonologHandler->backtrace',
+            'PhpTek\\Sentry\\Handler\\SentryHandler->write',
+            'PhpTek\\Sentry\\Handler\\SentryHandler->backtrace',
         ]);
     }
 
