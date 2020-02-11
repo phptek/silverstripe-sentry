@@ -130,9 +130,9 @@ Notes:
 You can set the minimum log-level you're interested in, using the `log_level` config, the module default is to report anything more severe than a `WARNING`:
 
 ```
-PhpTek\Sentry\Log\SentryLogger:
+PhpTek\Sentry\Handler\SentryHandler:
   # One of the permitted severities: DEBUG|INFO|WARNING|ERROR|FATAL
-  log_level: WARNING
+  log_level: ERROR
 ```
 
 ### SilverStripe 3

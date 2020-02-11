@@ -29,7 +29,7 @@ class SentryLogger
     /**
      * @var SentryAdaptor
      */
-    public $client = null;
+    public $adaptor = null;
 
     /**
      * Stipulates what gets shown in the Sentry UI, should some metric not be
@@ -53,8 +53,7 @@ class SentryLogger
         $user = $config['user'] ?? [];
         $tags = $config['tags'] ?? [];
         $extra = $config['extra'] ?? [];
-        // Set the minimum reporting level
-        $level = $config['level'] ?? self::config()->get('log_level');
+        $level = $config['level'] ?? [];
         $logger = Injector::inst()->create(static::class);
 
         // Set default environment

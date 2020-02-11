@@ -9,6 +9,7 @@
 
 namespace PhpTek\Sentry\Adaptor;
 
+use PhpTek\Sentry\Exception\SentryLogWriterException;
 use Sentry\State\Hub;
 use Sentry\ClientBuilder;
 use Sentry\State\Scope;
@@ -17,7 +18,6 @@ use Sentry\Severity;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Environment as Env;
-use PhpTek\Sentry\Adaptor\SentrySeverity;
 
 /**
  * The SentryAdaptor provides a functionality bridge between the getsentry/sentry
@@ -46,7 +46,7 @@ class SentryAdaptor
     public function __construct()
     {
         $client = ClientBuilder::create($this->getOpts() ?: [])->getClient();
-        Hub::setCurrent(new Hub($client));
+        Hub::getCurrent()->bindClient($client);
 
         $this->sentry = $client;
     }
