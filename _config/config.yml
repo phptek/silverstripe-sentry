@@ -3,8 +3,6 @@ Name: sentry-config
 ---
 
 PhpTek\Sentry\Log\SentryLogger:
-  # One of the permitted severities: DEBUG|INFO|WARNING|ERROR|FATAL
-  log_level: WARNING
   dependencies:
     adaptor: %$PhpTek\Sentry\Adaptor\SentryAdaptor
 

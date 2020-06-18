@@ -13,6 +13,7 @@ use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Sentry\Severity;
 use Sentry\State\Scope;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
@@ -25,7 +26,16 @@ use PhpTek\Sentry\Adaptor\SentrySeverity;
 class SentryHandler extends AbstractProcessingHandler
 {
 
-    use Injectable;
+    use Injectable,
+        Configurable;
+
+    /**
+     * @config
+     */
+    private static $log_level = null;
+
+    /** @var SentryAdaptor|null */
+    private $client = null;
 
     /**
      * @param  int     $level
@@ -33,11 +43,16 @@ class SentryHandler extends AbstractProcessingHandler
      * @param  array   $extras
      * @return void
      */
-    public function __construct(int $level = Logger::DEBUG, bool $bubble = true, array $extras = [])
+    public function __construct(int $level = Logger::WARNING, bool $bubble = true, array $extras = [])
     {
         // Returns an instance of {@link SentryLogger}
         $logger = SentryLogger::factory($extras);
         $this->client = $logger->getAdaptor();
+
+        // Override minimum log level through configuration
+        if (SentryHandler::config()->log_level) {
+            $level = SentryHandler::config()->log_level;
+        }
 
         parent::__construct($level, $bubble);
     }
