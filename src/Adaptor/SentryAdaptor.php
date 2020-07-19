@@ -173,7 +173,7 @@ class SentryAdaptor
         if ($opt && !empty($opts[$opt])) {
             // Return one
             return $opts[$opt];
-        } else if (!$opt) {
+        } elseif (!$opt) {
             // Return all
             return $opts;
         }
