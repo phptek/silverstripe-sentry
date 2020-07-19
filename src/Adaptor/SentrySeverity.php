@@ -62,7 +62,8 @@ class SentrySeverity
             case 'coreerror':
             case 'corwarning': // Possibly misspelling
             case 'corewarning':
-            case 'compilerrror':
+            case 'compilerrror': // Possibly misspelling
+            case 'compilerror':
             case 'compilewarning':
                 return Severity::FATAL;
             case 'recoverablerror':
