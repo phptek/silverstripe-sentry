@@ -9,6 +9,7 @@
 
 namespace PhpTek\Sentry\Handler;
 
+use Throwable;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Sentry\Severity;
@@ -17,7 +18,6 @@ use SilverStripe\Core\Injector\Injectable;
 use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
-use Throwable;
 
 /**
  * Monolog handler to send messages to a Sentry (https://github.com/getsentry/sentry) server
