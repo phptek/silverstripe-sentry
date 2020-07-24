@@ -13,9 +13,9 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\Backtrace;
+use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use SilverStripe\Core\Config\Configurable;
-use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
 
 /**
@@ -224,47 +224,47 @@ class SentryLogger
         return php_sapi_name();
     }
 
- 	/**
-	 * Returns the client IP address which originated this request.
+    /**
+     * Returns the client IP address which originated this request.
      * Lifted and modified from SilverStripe 3's SS_HTTPRequest.
-	 *
-	 * @return string
-	 */
-	public function getIP() : string
+     *
+     * @return string
+     */
+    public function getIP() : string
     {
-		$headerOverrideIP = null;
+        $headerOverrideIP = null;
 
-		if (defined('TRUSTED_PROXY')) {
-			$headers = (defined('SS_TRUSTED_PROXY_IP_HEADER')) ?
+        if (defined('TRUSTED_PROXY')) {
+            $headers = (defined('SS_TRUSTED_PROXY_IP_HEADER')) ?
                 [SS_TRUSTED_PROXY_IP_HEADER] :
                 null;
 
-			if(!$headers) {
-				// Backwards compatible defaults
-				$headers = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR'];
-			}
+            if (!$headers) {
+                // Backwards compatible defaults
+                $headers = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR'];
+            }
 
-			foreach($headers as $header) {
-				if(!empty($_SERVER[$header])) {
-					$headerOverrideIP = $_SERVER[$header];
+            foreach ($headers as $header) {
+                if (!empty($_SERVER[$header])) {
+                    $headerOverrideIP = $_SERVER[$header];
 
-					break;
-				}
-			}
-		}
+                    break;
+                }
+            }
+        }
 
         $proxy = Injector::inst()->create(TrustedProxyMiddleware::class);
 
-		if ($headerOverrideIP) {
-			return $proxy->getIPFromHeaderValue($headerOverrideIP);
-		}
+        if ($headerOverrideIP) {
+            return $proxy->getIPFromHeaderValue($headerOverrideIP);
+        }
 
         if (isset($_SERVER['REMOTE_ADDR'])) {
-			return $_SERVER['REMOTE_ADDR'];
-		}
+            return $_SERVER['REMOTE_ADDR'];
+        }
 
         return '';
-	}
+    }
 
     /**
      * Returns a default set of additional data specific to the user's part in
@@ -328,5 +328,4 @@ class SentryLogger
             'PhpTek\\Sentry\\Handler\\SentryHandler->backtrace',
         ]);
     }
-
 }

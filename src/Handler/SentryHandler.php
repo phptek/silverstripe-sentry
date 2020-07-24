@@ -9,10 +9,10 @@
 
 namespace PhpTek\Sentry\Handler;
 
+use Throwable;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Sentry\Severity;
-use Sentry\State\Scope;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use PhpTek\Sentry\Log\SentryLogger;
@@ -86,7 +86,7 @@ class SentryHandler extends AbstractProcessingHandler
 
         if (
                 isset($record['context']['exception']) &&
-                $record['context']['exception'] instanceof \Throwable
+                $record['context']['exception'] instanceof Throwable
         ) {
             $this->client->getSDK()->captureException(
                 $record['context']['exception'],
