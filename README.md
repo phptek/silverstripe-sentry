@@ -20,7 +20,7 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 ### SilverStripe 3
 
- * PHP5.4+, <7.0
+ * PHP5.4+, <=7.4
  * SilverStripe v3.1.0+, < 4.0
 
 ## Setup
@@ -29,11 +29,11 @@ Add the Composer package as a dependency to your project:
 
 ### SilverStripe 3
 
-    composer require phptek/sentry: 1.x
+    composer require phptek/sentry: 2.x
 
 ### SilverStripe 4
 
-    composer require phptek/sentry: 2.x
+    composer require phptek/sentry: 3.x
 
 Configure your application or site with the Sentry DSN into your project's YML config:
 
