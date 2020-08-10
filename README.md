@@ -20,7 +20,7 @@ This module binds Sentry.io and hosted Sentry installations, to the Monlog error
 
 ### SilverStripe 3
 
- * PHP5.4+, <7.0
+ * PHP 5.4+, <=7.4
  * SilverStripe v3.1.0+, < 4.0
 
 ## Setup
