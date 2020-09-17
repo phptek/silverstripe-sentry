@@ -69,6 +69,7 @@ The following will get you errors reported just in `test` and `live` but not `de
       - 'sentry-config'
     ---
 
+    ---
     Only:
       environment: test
     ---
