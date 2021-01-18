@@ -9,15 +9,16 @@
 
 namespace PhpTek\Sentry\Adaptor;
 
-use PhpTek\Sentry\Exception\SentryLogWriterException;
 use Sentry\State\Hub;
 use Sentry\ClientBuilder;
 use Sentry\State\Scope;
 use Sentry\ClientInterface;
 use Sentry\Severity;
+use Sentry\SentrySdk;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Environment as Env;
+use PhpTek\Sentry\Adaptor\SentrySeverity;
 
 /**
  * The SentryAdaptor provides a functionality bridge between the getsentry/sentry
@@ -46,7 +47,7 @@ class SentryAdaptor
     public function __construct()
     {
         $client = ClientBuilder::create($this->getOpts() ?: [])->getClient();
-        Hub::getCurrent()->bindClient($client);
+        SentrySdk::setCurrentHub(new Hub($client));
 
         $this->sentry = $client;
     }
@@ -70,7 +71,8 @@ class SentryAdaptor
      */
     public function setContext(string $field, $data) : void
     {
-        $options = Hub::getCurrent()->getClient()->getOptions();
+        $hub = SentrySdk::getCurrentHub();
+        $options = $hub->getClient()->getOptions();
         $options->setAttachStacktrace(true);
 
         switch ($field) {
@@ -79,7 +81,7 @@ class SentryAdaptor
                 $this->context['env'] = $data;
                 break;
             case 'tags':
-                Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use($data) : void {
                     foreach ($data as $tagName => $tagData) {
                         $scope->setTag($tagName, $tagData);
                         $this->context['tags'][$tagName] = $tagData;
@@ -87,13 +89,13 @@ class SentryAdaptor
                 });
                 break;
             case 'user':
-                Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use($data) : void {
                     $scope->setUser($data, true);
                     $this->context['user'] = $data;
                 });
                 break;
             case 'extra':
-                Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use($data) : void {
                     foreach ($data as $extraKey => $extraData) {
                         $scope->setExtra($extraKey, $extraData);
                         $this->context['extra'][$extraKey] = $extraData;
@@ -101,7 +103,7 @@ class SentryAdaptor
                 });
                 break;
             case 'level':
-                Hub::getCurrent()->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use($data) : void {
                     $scope->setLevel(new Severity(SentrySeverity::process_severity($level = $data)));
                 });
                 break;
@@ -173,7 +175,7 @@ class SentryAdaptor
         if ($opt && !empty($opts[$opt])) {
             // Return one
             return $opts[$opt];
-        } elseif (!$opt) {
+        } else if (!$opt) {
             // Return all
             return $opts;
         }
