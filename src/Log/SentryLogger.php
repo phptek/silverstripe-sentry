@@ -59,7 +59,7 @@ class SentryLogger
         // Set default environment
         $env = $env ?: $logger->defaultEnv();
         // Set any available user data
-        $user = $user ?: $logger->defaultUser();
+        $user = $user ?: [];
         // Set any available tags available in SS config
         $tags = array_merge($logger->defaultTags(), $tags);
         // Set any available additional (extra) data
@@ -230,7 +230,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getIP() : string
+    public static function get_ip() : string
     {
         $headerOverrideIP = null;
 
@@ -273,14 +273,14 @@ class SentryLogger
      * @param  mixed Member|null $member
      * @return array
      */
-    public function defaultUser(Member $member = null) : array
+    public static function user_data(Member $member = null) : array
     {
         if (!$member) {
             $member = Security::getCurrentUser();
         }
 
         return [
-            'IPAddress' => $this->getIP() ?: self::SLW_NOOP,
+            'IPAddress' => self::get_ip() ?: self::SLW_NOOP,
             'ID'       => $member ? $member->getField('ID') : self::SLW_NOOP,
             'Email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
         ];

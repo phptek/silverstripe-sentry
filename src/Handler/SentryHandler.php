@@ -15,6 +15,7 @@ use Monolog\Logger;
 use Sentry\Severity;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Security\Security;
 use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
@@ -83,6 +84,9 @@ class SentryHandler extends AbstractProcessingHandler
             'timestamp' => $record['datetime']->getTimestamp(),
             'stacktrace' => SentryLogger::backtrace($record),
         ]);
+
+        // For reasons..this is the only spot where we're able to getCurrentUser()
+        $this->client->setContext('user', SentryLogger::user_data(Security::getCurrentUser()));
 
         if (
                 isset($record['context']['exception']) &&
