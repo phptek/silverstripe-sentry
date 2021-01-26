@@ -1,7 +1,7 @@
 # Usage
 
 Once setup, everytime an `Exception` is thrown or PHP itself shuts down via `trigger_error()` etc or you "manually" trigger a log message to be sent to Sentry, all
-available data is automatically sent.
+available data is automatically sent to your remote Sentry instance.
 
 In addition to the module simply reporting all thrown `Exception`s, resulting in a stacktrace in Sentry itself, you can use Sentry as a simple logger
 with all the benefits of Sentry's tags and grouping. See the examples below.
@@ -12,7 +12,7 @@ with all the benefits of Sentry's tags and grouping. See the examples below.
 
 Set the following in your project's `_config.php`, to stipulate what the error-reporting threshold is.
 
-    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
+    SS_Log::add_writer(\phptek\Sentry\SentryLogger::factory(), SS_Log::ERR, '<=');
 
 ### SilverStripe 4
 
@@ -26,7 +26,7 @@ the default is to use the return value of `Director::get_environment_type()`.
 ### SilverStripe 3
 
     $config = ['env' => 'live'];
-    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
+    SS_Log::add_writer(\phptek\Sentry\SentryLogger::factory($config), SS_Log::ERR, '<=');
 
 ### SilverStripe 4
 
@@ -51,7 +51,7 @@ Sentry allows for custom key-value pairs to be recorded against each message tha
 These are known as "tags", and they allow for fine-grained grouping and filtering of messages via the Sentry UI.
 
 Note: It makes no sense to send hugely varying data in a tag. If it's unlikely that a tag you
-wish to send, is ever going to be repeated, don't send it as a tag. Look at using the "Extras" feature (described below)
+wish to send is ever going to be repeated, don't send it as a tag. Look at using the "Extras" feature (described below)
 instead.
 
 ### SilverStripe 3
@@ -62,7 +62,7 @@ instead.
             'Unique-ID' => 44
         ]
     ];
-    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
+    SS_Log::add_writer(\phptek\Sentry\SentryLogger::factory($config), SS_Log::ERR, '<=');
 
 ### SilverStripe 4
 
@@ -106,7 +106,7 @@ from within `_config.php` or at runtime, via passing the optional 3rd parameter 
             'Cats' => 'Are furry'
         ]
     ];
-    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory($config), SS_Log::ERR, '<=');
+    SS_Log::add_writer(\phptek\Sentry\SentryLogger::factory($config), SS_Log::ERR, '<=');
 
 ### Via SS_Log::log()
 
@@ -127,3 +127,4 @@ comprising the data you wish to send:
 
     // Send an `ERROR` level message
     $logger->log('ERROR', 'Help, my curry is too hot. I only asked for mild.', ['extra' => ['toilet' => 'now']]);
+

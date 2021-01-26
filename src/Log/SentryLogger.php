@@ -19,7 +19,7 @@ use SilverStripe\Core\Config\Configurable;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
 
 /**
- * The SentryLogWriter class is a bridge between {@link SentryAdaptor} and
+ * The SentryLogger class is a bridge between {@link SentryAdaptor} and
  * SilverStripe's use of Monolog.
  */
 class SentryLogger

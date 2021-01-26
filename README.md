@@ -32,7 +32,7 @@ Add the Composer package as a dependency to your project:
 Notes:
 
 * Versions 2.x and 3.x should work with the same setups, the latter simply uses a newer version of the Sentry PHP SDK, and has a leaner codebase.
-* Version 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor`, so your existing configuration(s) will have to be updated accordingly.
+* Version 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor` and `SentryLogWriter` was renamed to `SentryLogger`, so your existing configuration(s) may need to be updated accordingly.
 
 Configure your application or site with the Sentry DSN:
 
@@ -96,7 +96,7 @@ The following will get you errors reported just in `test` and `live` but not `de
 
 #### Proxies ####
 
-Should your app require outgoing traffic to be passed through an proxy, the following config will work:
+Should your app require outgoing traffic to be passed through a proxy, the following config will work:
 
     # Proxy constants
       http_proxy:
