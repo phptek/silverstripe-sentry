@@ -3,7 +3,7 @@
 /**
  * Class: SentryAdaptor.
  *
- * @author  Russell Michell 2017-2019 <russ@theruss.com>
+ * @author  Russell Michell 2017-2021 <russ@theruss.com>
  * @package phptek/sentry
  */
 
@@ -19,6 +19,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Environment as Env;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
+use PhpTek\Sentry\Exception\SentryLogWriterException;
 
 /**
  * The SentryAdaptor provides a functionality bridge between the getsentry/sentry
@@ -55,7 +56,7 @@ class SentryAdaptor
     /**
      * @return ClientInterface
      */
-    public function getSDK() : ClientInterface
+    public function getSDK(): ClientInterface
     {
         return $this->sentry;
     }
@@ -69,7 +70,7 @@ class SentryAdaptor
      * @return void
      * @throws SentryLogWriterException
      */
-    public function setContext(string $field, $data) : void
+    public function setContext(string $field, $data): void
     {
         $hub = SentrySdk::getCurrentHub();
         $options = $hub->getClient()->getOptions();
@@ -123,7 +124,7 @@ class SentryAdaptor
      *
      * @return Scope
      */
-    public function getContext() : Scope
+    public function getContext(): Scope
     {
         $scope = new Scope();
 

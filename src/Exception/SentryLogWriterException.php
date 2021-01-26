@@ -3,7 +3,7 @@
 /**
  * Class: SentryLogWriterException.
  *
- * @author  Russell Michell 2017-2019 <russ@theruss.com>
+ * @author  Russell Michell 2017-2021 <russ@theruss.com>
  * @package phptek/sentry
  */
 
