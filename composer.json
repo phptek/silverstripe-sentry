@@ -24,7 +24,6 @@
     "require": {
         "php": "^5.4|<7.5",
         "sentry/sdk": "^2",
-        "monolog/monolog": "^1.24.0",
         "silverstripe/framework": "^4"
     },
     "require-dev": {
