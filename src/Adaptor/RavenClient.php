@@ -9,10 +9,9 @@
 
 namespace PhpTek\Sentry\Adaptor;
 
-use phpTek\Sentry\Exception\SentryLogWriterException;
+use PhpTek\Sentry\Exception\SentryLogWriterException;
 use Raven_Client;
 use Raven_Exception;
-use SilverStripe\Core\Config\Config;
 
 /**
  * The RavenClient class simply acts as a bridge between the Raven PHP SDK and
@@ -57,7 +56,7 @@ class RavenClient extends SentryClientAdaptor
         $this->client = new Raven_Client($this->getOpts());
 
         // Installs all available PHP error handlers when set
-        if (Config::inst()->get(__CLASS__, 'install')) {
+        if (\Config::inst()->get(__CLASS__, 'install')) {
             $this->client->install();
         }
     }

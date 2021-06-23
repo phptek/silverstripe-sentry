@@ -4,10 +4,8 @@ namespace PhpTek\Sentry\Tasks;
 
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
-use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Dev\BuildTask;
 
-class TestConnectionTask extends BuildTask
+class TestConnectionTask extends \BuildTask
 {
     /** @var string */
     protected $title = 'Test Sentry Configuration';
@@ -19,12 +17,12 @@ class TestConnectionTask extends BuildTask
      * Implement this method in the task subclass to
      * execute via the TaskRunner
      *
-     * @param \SilverStripe\Control\HTTPRequest|null $request
+     * @param SS_HTTPRequest|null $request
      */
     public function run($request = null)
     {
         /** @var LoggerInterface $logger */
-        $logger = Injector::inst()->get(LoggerInterface::class);
+        $logger = \Injector::inst()->get(LoggerInterface::class);
 
         foreach (Logger::getLevels() as $name => $value) {
             $func = strtolower($name);
@@ -35,7 +33,7 @@ class TestConnectionTask extends BuildTask
 
     private static function output(string $message)
     {
-        $newLine = Director::is_cli() ? PHP_EOL : '<br/>';
+        $newLine = \Director::is_cli() ? PHP_EOL : '<br/>';
         printf($message . $newLine);
     }
 }

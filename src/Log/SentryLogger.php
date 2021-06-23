@@ -10,9 +10,6 @@
 namespace PhpTek\Sentry\Log;
 
 use PhpTek\Sentry\Adaptor\RavenClient;
-use SilverStripe\Control\Director;
-use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
-use SilverStripe\Core\Injector\Injector;
 
 /**
  * The SentryLogWriter class simply acts as a bridge between the configured Sentry
@@ -52,7 +49,7 @@ class SentryLogger
         $tags = isset($config['tags']) ? $config['tags'] : [];
         $extra = isset($config['extra']) ? $config['extra'] : [];
         /** @var SentryLogger $logger */
-        $logger = Injector::inst()->create(__CLASS__);
+        $logger = \Injector::inst()->create(__CLASS__);
 
         // Set default environment
         if (is_null($env)) {
@@ -90,7 +87,7 @@ class SentryLogger
      */
     public function defaultEnv()
     {
-        return Director::get_environment_type();
+        return \Director::get_environment_type();
     }
 
     /**
@@ -167,7 +164,7 @@ class SentryLogger
     public function getRequestType()
     {
         $isCLI = $this->getSAPI() !== 'cli';
-        $isAjax = Director::is_ajax();
+        $isAjax = \Director::is_ajax();
 
         return $isCLI && $isAjax ? 'AJAX' : 'Non-Ajax';
     }
@@ -253,7 +250,7 @@ class SentryLogger
 			}
 		}
 
-        $proxy = Injector::inst()->create(TrustedProxyMiddleware::class);
+        $proxy = \Injector::inst()->create(\TrustedProxyMiddleware::class);
 
 		if ($headerOverrideIP) {
 			return $proxy->getIPFromHeaderValue($headerOverrideIP);

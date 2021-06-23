@@ -9,8 +9,6 @@
 
 namespace PhpTek\Sentry\Adaptor;
 
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Core\Injector\Injector;
 
 /**
  * The SentryClientAdaptor provides the base-class functionality for subclasses
@@ -31,7 +29,7 @@ abstract class SentryClientAdaptor
     protected function getOpts($opt = '')
     {
         // Extract env-vars from YML config
-        $opts = Injector::inst()->convertServiceProperty(Config::inst()->get(__CLASS__, 'opts'));
+        $opts = \Injector::inst()->convertServiceProperty(\Config::inst()->get(__CLASS__, 'opts'));
 
         // Deal with proxy settings. Raven_Client permits host:port format but SilverStripe's
         // YML config only permits single backtick-enclosed env/consts per config
