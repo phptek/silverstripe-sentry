@@ -20,7 +20,7 @@ This module binds Sentry.io and locally-hosted Sentry installations, to the erro
 
 Add the Composer package as a dependency to your project:
 
-	composer require phptek/sentry: dev-master
+	composer require phptek/sentry:^1
 
 Configure your application or site with the Sentry DSN into your project's YML config:
 
