@@ -141,10 +141,16 @@ PhpTek\Sentry\Handler\SentryHandler:
 
 ### SilverStripe Framework v3
 
+YML Config:
+
     phptek\Sentry\Adaptor\SentryClientAdaptor:
       opts:
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
         dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
+
+mysite/_config.php:
+
+    SS_Log::add_writer(\phptek\Sentry\SentryLogWriter::factory(), SS_Log::ERR, '<=');
 
 ## Usage
 
