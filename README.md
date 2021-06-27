@@ -20,7 +20,7 @@ This module binds Sentry.io and hosted Sentry installations, to the Monlog error
 
 #### Setup:
 
-    composer require phptek/sentry ^3
+    composer require phptek/sentry:^3
 
 ### SilverStripe Framework v3
 
@@ -30,7 +30,7 @@ This module binds Sentry.io and hosted Sentry installations, to the Monlog error
 
 #### Setup:
 
-    composer require phptek/sentry ^1
+    composer require phptek/sentry:^1
 
 Notes:
 
