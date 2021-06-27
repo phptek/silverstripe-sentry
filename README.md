@@ -12,31 +12,34 @@ This module binds Sentry.io and hosted Sentry installations, to the Monlog error
 [RayGun](https://raygun.com), [Rollbar](https://rollbar.com), [AirBrake](https://airbrake.io/) and [BugSnag](https://www.bugsnag.com/) before, you'll know roughly what to expect.
 
 ## Requirements
-
-### SilverStripe 4
+### SilverStripe Framework v4
 
  * PHP >=7.0
  * SilverStripe ^4.0
+ * `phptek/sentry` version 3.x
 
-### SilverStripe 3
+#### Setup:
+
+    composer require phptek/sentry ^3
+
+### SilverStripe Framework v3
 
  * PHP 5.4+, <=7.4
- * SilverStripe v3.1.0+, < 4.0
+ * SilverStripe > v3.1, < 4
+ * `phptek/sentry` version 1.x
 
-## Setup
+#### Setup:
 
-Add the Composer package as a dependency to your project:
-
-    composer require phptek/sentry
+    composer require phptek/sentry ^1
 
 Notes:
 
-* Versions 2.x and 3.x should work with the same setups, the latter simply uses a newer version of the Sentry PHP SDK, and has a leaner codebase.
+* Versions 2.x and 3.x should work with the same Silverstripe v4 setups. v3 simply uses a newer version of the Sentry PHP SDK, and has a leaner codebase.
 * Version 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor` and `SentryLogWriter` was renamed to `SentryLogger`, so your existing configuration(s) may need to be updated accordingly.
 
 Configure your application or site with the Sentry DSN:
 
-### SilverStripe 4
+### SilverStripe Framework v4
 
 #### General Config ####
 
@@ -105,7 +108,7 @@ Should your app require outgoing traffic to be passed through a proxy, the follo
 
 Notes: 
 
-* In 3.x you can silence errors from `Injector` where "test" and "live" envs have `http_proxy` set, but "dev" environments don't. Just set `null` as the value. This applies to all YML config where some envs have a setting and others don't. For example:
+* In module version 3.x you can silence errors from `Injector` where "test" and "live" envs have `http_proxy` set, but "dev" environments don't. Just set `null` as the value. This applies to all YML config where some envs have a setting and others don't. For example:
 
 ```
 ...
@@ -136,7 +139,7 @@ PhpTek\Sentry\Handler\SentryHandler:
   log_level: ERROR
 ```
 
-### SilverStripe 3
+### SilverStripe Framework v3
 
     phptek\Sentry\Adaptor\SentryClientAdaptor:
       opts:
