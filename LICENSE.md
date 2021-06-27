@@ -1,4 +1,4 @@
-Copyright (c) 2016, Russell Michell - theruss.com
+Copyright (c) 2016-2021, Russell Michell - theruss.com
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
