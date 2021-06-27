@@ -3,12 +3,13 @@
 /**
  * Class: RavenClient.
  *
- * @author  Russell Michell 2017 <russ@theruss.com>
+ * @author  Russell Michell 2017, 2021 <russ@theruss.com>
  * @package phptek/sentry
  */
 
 namespace phptek\Sentry\Adaptor;
 
+use \Config;
 use phptek\Sentry\Adaptor\SentryClientAdaptor;
 use phptek\Sentry\Exception\SentryLogWriterException;
 
@@ -60,7 +61,7 @@ class RavenClient extends SentryClientAdaptor
         $this->client = new \Raven_Client($dsn);
         
         // Installs all available PHP error handlers when set
-        if ($this->config()->install === true) {
+        if (Config::inst()->get(__CLASS__, 'install') === true) {
             $this->client->install();
         }
     }

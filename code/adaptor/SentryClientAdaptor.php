@@ -9,6 +9,8 @@
 
 namespace phptek\Sentry\Adaptor;
 
+use \Config;
+
 /**
  * The SentryClientAdaptor provides the base-class functionality for subclasses
  * to act as bridges between the PHP SDK and the SentryLogWriter class itself.
@@ -16,7 +18,7 @@ namespace phptek\Sentry\Adaptor;
  * used at any point.
  */
 
-abstract class SentryClientAdaptor extends \Object
+abstract class SentryClientAdaptor
 {
 
     /**
@@ -25,7 +27,7 @@ abstract class SentryClientAdaptor extends \Object
      */
     protected function getOpts($opt)
     {
-        $opts = $this->config()->opts;
+        $opts = Config::inst()->get(__CLASS__, 'opts');
 
         if (!is_null($opts) && !empty($opts[$opt])) {
             return $opts[$opt];
