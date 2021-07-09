@@ -31,7 +31,7 @@ the default is to use the return value of `Director::get_environment_type()`.
 ### SilverStripe 4
 
 SilverStripe 4 uses `Monolog` and individual handlers for logging. Once you instantiate a `Logger` object, you have access to `Monolog`'s public API.
-    
+
     $config = ['env' => 'live'];
     $logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
         ->pushHandler(SentryHandler::create());
@@ -44,6 +44,73 @@ SilverStripe 4 uses `Monolog` and individual handlers for logging. Once you inst
 
     // Send an `INFO` level message
     $logger->info($message, $config);
+
+#### Log Level ####
+
+You can set the minimum log-level you're interested in, using the `log_level` config, the module default is to report anything more severe than a `DEBUG`:
+
+```
+PhpTek\Sentry\Handler\SentryHandler:
+  # One of the permitted severities: DEBUG|INFO|WARNING|ERROR|FATAL
+  log_level: ERROR
+```
+
+Building on top of the "manual" logging examples above, you can configure these to send only errors of a specific severity:
+
+```
+$logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
+    ->pushHandler(SentryHandler::create('INFO')); // Send errors >= INFO
+
+$logger->info('TEST: INFO');    // Sent
+$logger->warning('TEST: WARN'); // Sent
+$logger->error('TEST: ERROR');  // Sent
+```
+
+```
+$logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
+    ->pushHandler(SentryHandler::create('WARNING')); // Send errors >= WARNING
+
+$logger->info('TEST: INFO');    // Not sent
+$logger->warning('TEST: WARN'); // Sent
+$logger->error('TEST: ERROR');  // Sent
+```
+
+```
+$logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
+    ->pushHandler(SentryHandler::create('ERROR')); // Send errors >= ERROR
+
+$logger->info('TEST: INFO');    // Not sent
+$logger->warning('TEST: WARN'); // Not sent
+$logger->error('TEST: ERROR');  // Sent
+```
+
+Further; passing a severity in this way trumps any YML config you have set:
+
+YML:
+```
+PhpTek\Sentry\Handler\SentryHandler:
+  log_level: 'ERROR'
+```
+
+PHP:
+```
+$logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
+    ->pushHandler(SentryHandler::create()); // Send errors >= ERROR
+
+$logger->info('TEST: INFO');    // Not sent
+$logger->warning('TEST: WARN'); // Not sent
+$logger->error('TEST: ERROR');  // Sent
+```
+
+PHP:
+```
+$logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
+    ->pushHandler(SentryHandler::create('INFO)); // Send errors >= INFO (despite what's set in YML)
+
+$logger->info('TEST: INFO');    // Sent
+$logger->warning('TEST: WARN'); // Sent
+$logger->error('TEST: ERROR');  // Sent
+```
 
 ## Set tags
 
@@ -87,7 +154,7 @@ instead.
 
 ## Set extras
 
-Once a message is selected within the Sentry UI, additional, arbitrary data can be displayed 
+Once a message is selected within the Sentry UI, additional, arbitrary data can be displayed
 to further help with debugging. You can opt to send this as a consistent "baked-in" set of values
 from within `_config.php` or at runtime, via passing the optional 3rd parameter to `SS_Log::log()`.
 

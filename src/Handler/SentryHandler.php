@@ -44,16 +44,15 @@ class SentryHandler extends AbstractProcessingHandler
      * @param  array   $extras
      * @return void
      */
-    public function __construct(int $level = Logger::WARNING, bool $bubble = true, array $extras = [])
+    public function __construct($level = null, bool $bubble = true, array $extras = [])
     {
         // Returns an instance of {@link SentryLogger}
         $logger = SentryLogger::factory($extras);
         $this->client = $logger->getAdaptor();
 
-        // Override minimum log level through configuration
-        if (SentryHandler::config()->log_level) {
-            $level = SentryHandler::config()->log_level;
-        }
+        // Constructor args take precedence, then fallback to YML config or Logger::Debug
+        $level = $level ?: $this->config()->get('log_level');
+        $level = Logger::getLevels()[$level] ?? Logger::DEBUG;
 
         parent::__construct($level, $bubble);
     }

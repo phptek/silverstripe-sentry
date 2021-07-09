@@ -30,7 +30,7 @@ class SentrySeverity
         if (is_string($severity)) {
             $level = self::from_error($severity);
         // De-facto PHP severities as constants (ints) like E_NOTICE
-        } elseif (is_numeric($severity)) {
+        } else if (is_numeric($severity)) {
             $level = Severity::fromError($severity);
         } else {
             // "Other"
@@ -72,6 +72,7 @@ class SentrySeverity
             case 'notice':
             case 'user_notice':
             case 'strict':
+            case 'info':
                 return Severity::INFO;
             default:
                 // It's an error until proven otherwise
