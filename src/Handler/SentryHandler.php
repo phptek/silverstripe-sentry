@@ -3,7 +3,7 @@
 /**
  * Class: SentryHandler.
  *
- * @author  Russell Michell 2021 <russ@theruss.com>
+ * @author  Russell Michell 2017-2021 <russ@theruss.com>
  * @package phptek/sentry
  */
 
@@ -12,12 +12,17 @@ namespace PhpTek\Sentry\Handler;
 use Throwable;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use Sentry\Severity;
+use Sentry\EventHint;
+use Sentry\Stacktrace;
+use Sentry\SentrySdk;
+use Sentry\State\Hub;
+use Sentry\ClientBuilder;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Security\Security;
 use PhpTek\Sentry\Log\SentryLogger;
-use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
 
 /**
@@ -31,29 +36,31 @@ class SentryHandler extends AbstractProcessingHandler
         Configurable;
 
     /**
-     * @config
+     * @var mixed int|null
      */
     private static $log_level = null;
 
-    /** @var SentryAdaptor|null */
-    private $client = null;
+    /**
+     * @var mixed SentryLogger|null
+     */
+    private $logger = null;
 
     /**
      * @param  int     $level
      * @param  boolean $bubble
-     * @param  array   $extras
+     * @param  array   $config
      * @return void
      */
-    public function __construct(int $level = Logger::WARNING, bool $bubble = true, array $extras = [])
+    public function __construct($level = null, bool $bubble = true, array $config = [])
     {
-        // Returns an instance of {@link SentryLogger}
-        $logger = SentryLogger::factory($extras);
-        $this->client = $logger->getAdaptor();
+        $client = ClientBuilder::create(SentryAdaptor::get_opts() ?: [])->getClient();
+        $level = $level ?: $this->config()->get('log_level');
+        $level = Logger::getLevels()[$level] ?? Logger::DEBUG;
 
-        // Override minimum log level through configuration
-        if (SentryHandler::config()->log_level) {
-            $level = SentryHandler::config()->log_level;
-        }
+        SentrySdk::setCurrentHub(new Hub($client));
+
+        $this->logger = SentryLogger::factory($config, $client);
+        $this->client = $client;
 
         parent::__construct($level, $bubble);
     }
@@ -76,44 +83,41 @@ class SentryHandler extends AbstractProcessingHandler
      *
      * @return void
      */
-    protected function write(array $record) : void
+    protected function write(array $record): void
     {
-        // TODO $record['stacktrace'] is never actually sent anywhere. As such,
-        // we cannot clean-up the class::methods that we'd like to.
         $record = array_merge($record, [
             'timestamp' => $record['datetime']->getTimestamp(),
-            'stacktrace' => SentryLogger::backtrace($record),
         ]);
+        $adaptor = $this->logger->getAdaptor();
 
         // For reasons..this is the only spot where we're able to getCurrentUser()
-        $this->client->setContext('user', SentryLogger::user_data(Security::getCurrentUser()));
+        $adaptor->setContext('user', SentryLogger::user_data(Security::getCurrentUser()));
+
+        // Create a Sentry EventHint and pass an instance of Stacktrace to it.
+        // See SentryAdaptor: We explicitly enable/disable default (Sentry) stacktraces.
+        if ($adaptor::get_opts('custom_stacktrace')) {
+            $eventHint = EventHint::fromArray([
+                'stacktrace' => new Stacktrace(SentryLogger::backtrace($record)),
+            ]);
+        }
 
         if (
                 isset($record['context']['exception']) &&
                 $record['context']['exception'] instanceof Throwable
         ) {
-            $this->client->getSDK()->captureException(
+            $this->client->captureException(
                 $record['context']['exception'],
-                $this->client->getContext()
+                $adaptor->getContext(),
+                isset($eventHint) ? $eventHint : null
             );
         } else {
-            // Note: We are setting Sentry\Options::setAttachStacktrace(true) in
-            // SentryAdaptor and therefore have no control over cleaning-up the exceptions
-            // it produces
-            $this->client->getSDK()->captureMessage(
+            $this->client->captureMessage(
                 $record['formatted'],
                 new Severity(SentrySeverity::process_severity($record['level_name'])),
-                $this->client->getContext()
+                $adaptor->getContext(),
+                isset($eventHint) ? $eventHint : null
             );
         }
-    }
-
-    /**
-     * @return SentryAdaptor
-     */
-    public function getClient() : SentryAdaptor
-    {
-        return $this->client;
     }
 
 }

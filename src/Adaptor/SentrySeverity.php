@@ -3,7 +3,8 @@
 /**
  * Class: SentrySeverity.
  *
- * @author  Russell Michell 2017-2021 <russ@theruss.com>
+ * @author  Russell Michell 2019-2021 <russ@theruss.com>
+ * @author  Gareth Jones 2019 <jones258@gmail.com>
  * @package phptek/sentry
  */
 
@@ -24,13 +25,13 @@ class SentrySeverity
      *                                    PHP itself.
      * @return string
      */
-    public static function process_severity($severity) : string
+    public static function process_severity($severity): string
     {
         // Stringified PHP severities out of \debug_backtrace() like "notice"
         if (is_string($severity)) {
             $level = self::from_error($severity);
         // De-facto PHP severities as constants (ints) like E_NOTICE
-        } elseif (is_numeric($severity)) {
+        } else if (is_numeric($severity)) {
             $level = Severity::fromError($severity);
         } else {
             // "Other"
@@ -47,7 +48,7 @@ class SentrySeverity
      * @param  string $severity An incoming severity.
      * @return string
      */
-    public static function from_error(string $severity) : string
+    public static function from_error(string $severity): string
     {
         $severity = strtolower($severity);
 
@@ -72,6 +73,7 @@ class SentrySeverity
             case 'notice':
             case 'user_notice':
             case 'strict':
+            case 'info':
                 return Severity::INFO;
             default:
                 // It's an error until proven otherwise

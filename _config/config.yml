@@ -2,10 +2,6 @@
 Name: sentry-config
 ---
 
-PhpTek\Sentry\Log\SentryLogger:
-  dependencies:
-    adaptor: '%$PhpTek\Sentry\Adaptor\SentryAdaptor'
-
 SilverStripe\Core\Injector\Injector:
   Psr\Log\LoggerInterface:
     calls:
