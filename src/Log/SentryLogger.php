@@ -40,7 +40,7 @@ class SentryLogger
     const SLW_NOOP = 'Unavailable';
 
     /**
-     * A static constructor as per {@link Zend_Log_FactoryInterface}.
+     * Factory, consumed by {@link SentryHandler}.
      *
      * @param  array $config    An array of optional additional configuration for
      *                          passing custom information to Sentry. See the README

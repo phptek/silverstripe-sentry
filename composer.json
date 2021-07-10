@@ -23,7 +23,7 @@
     },
     "require": {
         "php": "^5.4|<7.5",
-        "sentry/sdk": "^2",
+        "sentry/sdk": "^3",
         "silverstripe/framework": "^4"
     },
     "require-dev": {
