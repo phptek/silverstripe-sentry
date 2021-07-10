@@ -9,6 +9,8 @@
 
 namespace PhpTek\Sentry\Log;
 
+use Composer\InstalledVersions;
+use Sentry\Frame;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
 use SilverStripe\Core\Injector\Injector;
@@ -35,19 +37,26 @@ class SentryLogger
      * Stipulates what gets shown in the Sentry UI, should some metric not be
      * available for any reason.
      *
-     * @const string
+     * @var string
      */
     const SLW_NOOP = 'Unavailable';
 
     /**
-     * A static constructor as per {@link Zend_Log_FactoryInterface}.
+     * Default text to show if in self-generated stacktraces, we're unable to discern data.
+     *
+     * @var string
+     */
+    public const DEFAULT_FRAME_VAL = 'Unknown';
+
+    /**
+     * Factory, consumed by {@link SentryHandler}.
      *
      * @param  array $config    An array of optional additional configuration for
      *                          passing custom information to Sentry. See the README
      *                          for more detail.
      * @return SentryLogger
      */
-    public static function factory(array $config = []) : SentryLogger
+    public static function factory(array $config = []): SentryLogger
     {
         $env = $config['env'] ?? [];
         $user = $config['user'] ?? [];
@@ -77,7 +86,7 @@ class SentryLogger
     /**
      * @return SentryAdaptor
      */
-    public function getAdaptor() : SentryAdaptor
+    public function getAdaptor(): SentryAdaptor
     {
         return $this->adaptor;
     }
@@ -88,7 +97,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function defaultEnv() : string
+    public function defaultEnv(): string
     {
         return Director::get_environment_type();
     }
@@ -108,13 +117,14 @@ class SentryLogger
      *
      * @return array
      */
-    public function defaultTags() : array
+    public function defaultTags(): array
     {
         return [
-            'Request-Method'=> $this->getReqMethod(),
-            'Request-Type'  => $this->getRequestType(),
-            'SAPI'          => $this->getSAPI(),
-            'SS-Version'    => $this->getPackageInfo('silverstripe/framework')
+            'request.method'=> $this->getReqMethod(),
+            'request.type' => $this->getRequestType(),
+            'php.sapi' => $this->getSAPI(),
+            'silverstripe.version.framework' => $this->getPackageInfo('silverstripe/framework'),
+            'silverstripe.version.phptek/sentry' => $this->getPackageInfo('phptek/sentry'),
         ];
     }
 
@@ -126,36 +136,11 @@ class SentryLogger
      *
      * @return array
      */
-    public function defaultExtra() : array
+    public function defaultExtra(): array
     {
         return [
-            'Peak-Memory'   => $this->getPeakMemory()
+            'php.peak.memory' => $this->getPeakMemory(),
         ];
-    }
-
-    /**
-     * Return the version of $pkg taken from composer.lock.
-     *
-     * @param  string $pkg e.g. "silverstripe/framework"
-     * @return string
-     */
-    public function getPackageInfo(string $pkg) : string
-    {
-        $lockFileJSON = BASE_PATH . '/composer.lock';
-
-        if (!file_exists($lockFileJSON) || !is_readable($lockFileJSON)) {
-            return self::SLW_NOOP;
-        }
-
-        $lockFileData = json_decode(file_get_contents($lockFileJSON), true);
-
-        foreach ($lockFileData['packages'] as $package) {
-            if ($package['name'] === $pkg) {
-                return $package['version'];
-            }
-        }
-
-        return self::SLW_NOOP;
     }
 
     /**
@@ -164,7 +149,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getRequestType() : string
+    public function getRequestType(): string
     {
         $isCLI = $this->getSAPI() !== 'cli';
         $isAjax = Director::is_ajax();
@@ -177,7 +162,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getPeakMemory() : string
+    public function getPeakMemory(): string
     {
         $peak = memory_get_peak_usage(true) / 1024 / 1024;
 
@@ -189,15 +174,9 @@ class SentryLogger
      *
      * @return string
      */
-    public function getUserAgent() : string
+    public function getUserAgent(): string
     {
-        $ua = @$_SERVER['HTTP_USER_AGENT'];
-
-        if (!empty($ua)) {
-            return $ua;
-        }
-
-        return self::SLW_NOOP;
+        return $_SERVER['HTTP_USER_AGENT'] ?? self::SLW_NOOP;
     }
 
     /**
@@ -205,23 +184,26 @@ class SentryLogger
      *
      * @return string
      */
-    public function getReqMethod() : string
+    public function getReqMethod(): string
     {
-        $method = @$_SERVER['REQUEST_METHOD'];
-
-        if (!empty($method)) {
-            return $method;
-        }
-
-        return self::SLW_NOOP;
+        return $_SERVER['REQUEST_METHOD'] ?? self::SLW_NOOP;
     }
 
     /**
      * @return string
      */
-    public function getSAPI() : string
+    public function getSAPI(): string
     {
         return php_sapi_name();
+    }
+
+    /**
+     * @param  string $package
+     * @return string
+     */
+    public function getPackageInfo(string $package): string
+    {
+        return InstalledVersions::getVersion(trim($package)) ?? self::SLW_NOOP;
     }
 
     /**
@@ -230,7 +212,7 @@ class SentryLogger
      *
      * @return string
      */
-    public static function get_ip() : string
+    public static function get_ip(): string
     {
         $headerOverrideIP = null;
 
@@ -273,7 +255,7 @@ class SentryLogger
      * @param  mixed Member|null $member
      * @return array
      */
-    public static function user_data(Member $member = null) : array
+    public static function user_data(Member $member = null): array
     {
         if (!$member) {
             $member = Security::getCurrentUser();
@@ -290,15 +272,19 @@ class SentryLogger
      * Manually extract or generate a suitable backtrace. This is especially useful
      * in non-exception reports such as those that use Sentry\Client::captureMessage().
      *
+     * Note: Calling logic only makes use of this if the "custom_stacktrace" option is enabled.
+     * As it is, it requires a little more work to make it on-par with Sentry's defaults (which is this
+     * module's default also).
+     *
      * @param  array $record
-     * @return array
+     * @return array An array of filtered Sentry\Frame objects.
      */
-    public static function backtrace(array $record) : array
+    public static function backtrace(array $record): array
     {
         if (!empty($record['context']['trace'])) {
             // Provided trace
             $bt = $record['context']['trace'];
-        } elseif (isset($record['context']['exception'])) {
+        } else if (isset($record['context']['exception'])) {
             // Generate trace from exception
             $bt = $record['context']['exception']->getTrace();
         } else {
@@ -307,8 +293,8 @@ class SentryLogger
 
             // Push current line into context
             array_unshift($bt, [
-                'file'     => $bt['file'] ?? 'N/A',
-                'line'     => $bt['line'] ?? 'N/A',
+                'file'     => $bt['file'] ?? self::DEFAULT_FRAME_VAL,
+                'line'     => (int) ($bt['line'] ?? 0),
                 'function' => '',
                 'class'    => '',
                 'type'     => '',
@@ -317,15 +303,28 @@ class SentryLogger
         }
 
         // Regardless of where it came from, filter the exception
-        return Backtrace::filter_backtrace($bt, [
+        $filtered = Backtrace::filter_backtrace($bt, [
             '',
             'Monolog\\Handler\\AbstractProcessingHandler->handle',
             'Monolog\\Logger->addRecord',
             'Monolog\\Logger->error',
             'Monolog\\Logger->log',
             'Monolog\\Logger->warn',
-            'PhpTek\\Sentry\\Handler\\SentryHandler->write',
-            'PhpTek\\Sentry\\Handler\\SentryHandler->backtrace',
+            'PhpTek\\Sentry\\Handler\\SentryHandler',
+            'PhpTek\\Sentry\\Handler\\SentryHandler::write',
+            'PhpTek\\Sentry\\Logger\\SentryLogger::backtrace',
         ]);
+
+        return array_map(function($item) {
+            return new Frame(
+                $item['function'] ?? self::DEFAULT_FRAME_VAL,
+                $item['file'] ?? self::DEFAULT_FRAME_VAL,
+                $item['line'] ?? 0,
+                $item['raw_function'] ?? self::DEFAULT_FRAME_VAL,
+                $item['abs_filepath'] ?? self::DEFAULT_FRAME_VAL,
+                $item['vars'] ?? [],
+                $item['in_app'] ?? true,
+            );
+        }, $filtered);
     }
 }

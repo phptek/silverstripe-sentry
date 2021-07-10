@@ -74,7 +74,9 @@ class SentryAdaptor
     {
         $hub = SentrySdk::getCurrentHub();
         $options = $hub->getClient()->getOptions();
-        $options->setAttachStacktrace(true);
+
+        // Use Sentry's own default stacktrace. This was the default prior to v4
+        $options->setAttachStacktrace((bool) !$this->config()->get('custom_stacktrace'));
 
         switch ($field) {
             case 'env':
@@ -82,29 +84,31 @@ class SentryAdaptor
                 $this->context['env'] = $data;
                 break;
             case 'tags':
-                $hub->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data) : void {
                     foreach ($data as $tagName => $tagData) {
+                        $tagName = self::normalise_key($tagName);
                         $scope->setTag($tagName, $tagData);
                         $this->context['tags'][$tagName] = $tagData;
                     }
                 });
                 break;
             case 'user':
-                $hub->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data) : void {
                     $scope->setUser($data, true);
                     $this->context['user'] = $data;
                 });
                 break;
             case 'extra':
-                $hub->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data) : void {
                     foreach ($data as $extraKey => $extraData) {
+                        $extraKey = self::normalise_key($extraKey);
                         $scope->setExtra($extraKey, $extraData);
                         $this->context['extra'][$extraKey] = $extraData;
                     }
                 });
                 break;
             case 'level':
-                $hub->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data) : void {
                     $scope->setLevel(new Severity(SentrySeverity::process_severity($level = $data)));
                 });
                 break;
@@ -131,10 +135,12 @@ class SentryAdaptor
         $scope->setUser($this->context['user']);
 
         foreach ($this->context['tags'] as $tagKey => $tagData) {
+            $tagKey = self::normalise_key($tagKey);
             $scope->setTag($tagKey, $tagData);
         }
 
         foreach ($this->context['extra'] as $extraKey => $extraData) {
+            $extraKey = self::normalise_key($extraKey);
             $scope->setExtra($extraKey, $extraData);
         }
 
@@ -146,9 +152,9 @@ class SentryAdaptor
      * proxy options too.
      *
      * @param  string $opt
-     * @return mixed  string|array|null depending on whether $opts is passed.
+     * @return mixed  string|array Depending on whether $opts is passed.
      */
-    protected function getOpts(string $opt = '')
+    public function getOpts(string $opt = '')
     {
         $opts = [];
 
@@ -173,14 +179,16 @@ class SentryAdaptor
             }
         }
 
-        if ($opt && !empty($opts[$opt])) {
-            // Return one
-            return $opts[$opt];
-        } else if (!$opt) {
-            // Return all
-            return $opts;
-        }
-
-        return null;
+        return $opts[$opt] ?? $opts;
     }
+
+    /**
+     * @param  string $key
+     * @return string
+     */
+    private static function normalise_key(string $key): string
+    {
+        return strtolower(trim(str_replace(' ', '.', $key)));
+    }
+
 }
