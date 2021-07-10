@@ -25,12 +25,14 @@ class SentrySeverityTest extends SapphireTest
         // Some userland config
         $this->assertEquals('warning', SentrySeverity::process_severity('WARNING'));
         $this->assertEquals('fatal', SentrySeverity::process_severity('ERROR'));
-        $this->assertEquals('error', SentrySeverity::process_severity('WIBBLE'));
+        $this->assertEquals('error', SentrySeverity::process_severity('WIBBLE'));  // "error" is the default
+        $this->assertEquals('info', SentrySeverity::process_severity('INFO'));
 
         // Some stringified PHP severities
         $this->assertEquals('warning', SentrySeverity::process_severity('warning'));
         $this->assertEquals('fatal', SentrySeverity::process_severity('error'));
         $this->assertEquals('info', SentrySeverity::process_severity('notice'));
+        $this->assertEquals('info', SentrySeverity::process_severity('info'));
 
         // De-facto PHP severities
         $this->assertEquals('warning', SentrySeverity::process_severity(E_WARNING));

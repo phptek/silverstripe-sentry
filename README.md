@@ -4,11 +4,11 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/phptek/silverstripe-sentry/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/phptek/silverstripe-sentry/?branch=master)
 [![License](https://poser.pugx.org/phptek/sentry/license.svg)](https://github.com/phptek/silverstripe-sentry/blob/master/LICENSE.md)
 
-[Sentry](https://sentry.io) is an error and exception aggregation service. It takes your application's errors, aggregates them alongside configurable context and stores them for later analysis and debugging. 
+[Sentry](https://sentry.io) is an error and exception aggregation service. It takes your application's errors, aggregates them alongside configurable context and stores them for later analysis and debugging.
 
 Imagine this: You see errors and exceptions before your clients do. The error > report > debug > patch > deploy cycle is therefore the most efficient it can possibly be.
 
-This module binds Sentry.io and hosted Sentry installations, to the Monlog error logger in SilverStripe. If you've used systems like 
+This module binds Sentry.io and hosted Sentry installations, to the Monlog error logger in SilverStripe. If you've used systems like
 [RayGun](https://raygun.com), [Rollbar](https://rollbar.com), [AirBrake](https://airbrake.io/) and [BugSnag](https://www.bugsnag.com/) before, you'll know roughly what to expect.
 
 ## Requirements
@@ -16,32 +16,24 @@ This module binds Sentry.io and hosted Sentry installations, to the Monlog error
 
  * PHP >=7.0
  * SilverStripe ^4.0
- * `phptek/sentry` version 3.x
+ * `phptek/sentry` version 4.x
 
 #### Setup:
 
-    composer require phptek/sentry:^3
+    composer require phptek/sentry:^4
 
 ### SilverStripe Framework v3
 
- * PHP 5.4+, <=7.4
- * SilverStripe > v3.1, < 4
- * `phptek/sentry` version 1.x
-
-#### Setup:
-
-    composer require phptek/sentry:^1
+See version 1.x
 
 Notes:
 
-* Versions 2.x and 3.x should work with the same Silverstripe v4 setups. v3 simply uses a newer version of the Sentry PHP SDK, and has a leaner codebase.
+* Versions 2.x, 3.x and 4.x should work with the same Silverstripe v4 setups. v3+ simply use newer versions of the Sentry PHP SDK and have additional bugfixes and features.
 * Version 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor` and `SentryLogWriter` was renamed to `SentryLogger`, so your existing configuration(s) may need to be updated accordingly.
 
 Configure your application or site with the Sentry DSN:
 
-### SilverStripe Framework v4
-
-#### General Config ####
+#### Config ####
 
 You can set your DSN as a first-class environment variable or via your project's `.env` file:
 
@@ -49,7 +41,7 @@ You can set your DSN as a first-class environment variable or via your project's
 
 Or you can set it in YML config, where you gain a little more flexibility and control:
 
-The following will get you errors reported in all environment modes: `dev`, `test` and `live`: 
+The following will get you errors reported in all environment modes: `dev`, `test` and `live`:
 
     ---
     Name: my-project-config-sentry
@@ -64,7 +56,7 @@ The following will get you errors reported in all environment modes: `dev`, `tes
 
 #### Conditional Config ####
 
-The following will get you errors reported just in `test` and `live` but not `dev`: 
+The following will get you errors reported just in `test` and `live` but not `dev`:
 
     ---
     Name: my-project-config-sentry
@@ -97,18 +89,11 @@ The following will get you errors reported just in `test` and `live` but not `de
         dsn: null
     ---
 
-#### Proxies ####
+Please review the [usage docs](docs/usage.md) for further configuration and customisation options.
 
-Should your app require outgoing traffic to be passed through a proxy, the following config will work:
+Notes:
 
-    # Proxy constants
-      http_proxy:
-        host: '`MY_OUTBOUND_PROXY`'
-        port: '`MY_OUTBOUND_PROXY_PORT`'
-
-Notes: 
-
-* In module version 3.x you can silence errors from `Injector` where "test" and "live" envs have `http_proxy` set, but "dev" environments don't. Just set `null` as the value. This applies to all YML config where some envs have a setting and others don't. For example:
+* You can silence errors from `Injector` where "test" and "live" envs have `http_proxy` set, but "dev" environments don't. Just set `null` as the value. This applies to all YML config where some envs have a setting and others don't. For example:
 
 ```
 ...
@@ -128,16 +113,6 @@ Notes:
 
     After:
       - 'sentry-config'
-
-#### Log Level ####
-
-You can set the minimum log-level you're interested in, using the `log_level` config, the module default is to report anything more severe than a `WARNING`:
-
-```
-PhpTek\Sentry\Handler\SentryHandler:
-  # One of the permitted severities: DEBUG|INFO|WARNING|ERROR|FATAL
-  log_level: ERROR
-```
 
 ### SilverStripe Framework v3
 

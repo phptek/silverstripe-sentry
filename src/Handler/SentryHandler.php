@@ -3,7 +3,7 @@
 /**
  * Class: SentryHandler.
  *
- * @author  Russell Michell 2021 <russ@theruss.com>
+ * @author  Russell Michell 2017-2021 <russ@theruss.com>
  * @package phptek/sentry
  */
 
@@ -13,6 +13,8 @@ use Throwable;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
 use Sentry\Severity;
+use Sentry\EventHint;
+use Sentry\Stacktrace;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Security\Security;
@@ -35,25 +37,26 @@ class SentryHandler extends AbstractProcessingHandler
      */
     private static $log_level = null;
 
-    /** @var SentryAdaptor|null */
+    /**
+     * @var SentryAdaptor|null
+     */
     private $client = null;
 
     /**
      * @param  int     $level
      * @param  boolean $bubble
-     * @param  array   $extras
+     * @param  array   $config
      * @return void
      */
-    public function __construct(int $level = Logger::WARNING, bool $bubble = true, array $extras = [])
+    public function __construct($level = null, bool $bubble = true, array $config = [])
     {
         // Returns an instance of {@link SentryLogger}
-        $logger = SentryLogger::factory($extras);
+        $logger = SentryLogger::factory($config);
         $this->client = $logger->getAdaptor();
 
-        // Override minimum log level through configuration
-        if (SentryHandler::config()->log_level) {
-            $level = SentryHandler::config()->log_level;
-        }
+        // Constructor args take precedence, then fallback to YML config or Logger::Debug
+        $level = $level ?: $this->config()->get('log_level');
+        $level = Logger::getLevels()[$level] ?? Logger::DEBUG;
 
         parent::__construct($level, $bubble);
     }
@@ -76,17 +79,22 @@ class SentryHandler extends AbstractProcessingHandler
      *
      * @return void
      */
-    protected function write(array $record) : void
+    protected function write(array $record): void
     {
-        // TODO $record['stacktrace'] is never actually sent anywhere. As such,
-        // we cannot clean-up the class::methods that we'd like to.
         $record = array_merge($record, [
             'timestamp' => $record['datetime']->getTimestamp(),
-            'stacktrace' => SentryLogger::backtrace($record),
         ]);
 
         // For reasons..this is the only spot where we're able to getCurrentUser()
         $this->client->setContext('user', SentryLogger::user_data(Security::getCurrentUser()));
+
+        // Create a Sentry EventHint and pass an instance of Stacktrace to it.
+        // See SentryAdaptor: We explicitly enable/disable default (Sentry) stacktraces.
+        if ($this->getClient()->config()->get('custom_stacktrace')) {
+            $eventHint = EventHint::fromArray([
+                'stacktrace' => new Stacktrace(SentryLogger::backtrace($record)),
+            ]);
+        }
 
         if (
                 isset($record['context']['exception']) &&
@@ -94,16 +102,15 @@ class SentryHandler extends AbstractProcessingHandler
         ) {
             $this->client->getSDK()->captureException(
                 $record['context']['exception'],
-                $this->client->getContext()
+                $this->client->getContext(),
+                $eventHint ?? null
             );
         } else {
-            // Note: We are setting Sentry\Options::setAttachStacktrace(true) in
-            // SentryAdaptor and therefore have no control over cleaning-up the exceptions
-            // it produces
             $this->client->getSDK()->captureMessage(
                 $record['formatted'],
                 new Severity(SentrySeverity::process_severity($record['level_name'])),
-                $this->client->getContext()
+                $this->client->getContext(),
+                $eventHint ?? null
             );
         }
     }
@@ -111,7 +118,7 @@ class SentryHandler extends AbstractProcessingHandler
     /**
      * @return SentryAdaptor
      */
-    public function getClient() : SentryAdaptor
+    public function getClient(): SentryAdaptor
     {
         return $this->client;
     }
