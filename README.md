@@ -12,28 +12,22 @@ This module binds Sentry.io and hosted Sentry installations, to the Monlog error
 [RayGun](https://raygun.com), [Rollbar](https://rollbar.com), [AirBrake](https://airbrake.io/) and [BugSnag](https://www.bugsnag.com/) before, you'll know roughly what to expect.
 
 ## Requirements
-### SilverStripe Framework v4
 
  * PHP >=7.0
  * SilverStripe ^4.0
- * `phptek/sentry` version 4.x
+ * `phptek/sentry` version 4.x (use 1.x for Silverstripe 3)
 
-#### Setup:
+## Setup:
 
     composer require phptek/sentry:^4
 
-### SilverStripe Framework v3
 
-See version 1.x
-
-Notes:
+## Notes:
 
 * Versions 2.x, 3.x and 4.x should work with the same Silverstripe v4 setups. v3+ simply use newer versions of the Sentry PHP SDK and have additional bugfixes and features.
 * Version 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor` and `SentryLogWriter` was renamed to `SentryLogger`, so your existing configuration(s) may need to be updated accordingly.
 
-Configure your application or site with the Sentry DSN:
-
-#### Config ####
+## Config
 
 You can set your DSN as a first-class environment variable or via your project's `.env` file:
 
@@ -54,7 +48,7 @@ The following will get you errors reported in all environment modes: `dev`, `tes
         # Example DSN only. Obviously you'll need to setup your own Sentry "Project"
         dsn: http://deacdf9dfedb24ccdce1b90017b39dca:deacdf9dfedb24ccdce1b90017b39dca@sentry.mydomain.nz/44
 
-#### Conditional Config ####
+### Conditional Config
 
 The following will get you errors reported just in `test` and `live` but not `dev`:
 
