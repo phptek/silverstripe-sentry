@@ -36,12 +36,17 @@ class SentryAdaptor
     protected $sentry;
 
     /**
-     * Internal storage for context. Used only in the case of non-exception
-     * data sent to Sentry.
+     * Internal storage for context. Used only when non-exception
+     * data is sent to Sentry instance.
      *
      * @var array
      */
-    protected $context = [];
+    protected $context = [
+        'env' => '',
+        'tags' => [],
+        'extra' => [],
+        'user' => [],
+    ];
 
     /**
      * @return void
@@ -95,7 +100,7 @@ class SentryAdaptor
                 break;
             case 'user':
                 $hub->configureScope(function (Scope $scope) use ($data): void {
-                    $scope->setUser($data, true);
+                    $scope->setUser($data);
                     $this->context['user'] = $data;
                 });
                 break;
