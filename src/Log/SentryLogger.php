@@ -10,6 +10,7 @@
 namespace PhpTek\Sentry\Log;
 
 use Composer\InstalledVersions;
+use Monolog\Logger;
 use Sentry\Frame;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
@@ -19,7 +20,6 @@ use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use SilverStripe\Core\Config\Configurable;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
-use PhpTek\Sentry\Helper\SentryHelper;
 
 /**
  * The SentryLogger class is a bridge between {@link SentryAdaptor} and
@@ -59,21 +59,20 @@ class SentryLogger
      */
     public static function factory(array $config = []): SentryLogger
     {
-        $env = $config['env'] ?? [];
-        $user = $config['user'] ?? [];
-        $tags = $config['tags'] ?? [];
-        $extra = $config['extra'] ?? [];
-        $level = $config['level'] ?? [];
-        $logger = Injector::inst()->create(static::class);
+        $logger = Injector::inst()->get(static::class);
+        $env = $logger->defaultEnv();
+        $tags = $logger->defaultTags();
+        $extra = $logger->defaultExtra();
+        $user = [];
+        $level = Logger::DEBUG;
 
-        // Set default environment
-        $env = $env ?: $logger->defaultEnv();
-        // Set any available user data
-        $user = $user ?: [];
-        // Set any available tags available in SS config
-        $tags = array_merge($logger->defaultTags(), $tags);
-        // Set any available additional (extra) data
-        $extra = array_merge($logger->defaultExtra(), $extra);
+        if ($config) {
+            $env = $config['env'] ?? $level;
+            $tags = array_merge($tags, $config['tags'] ?? []);
+            $extra = array_merge($extra, $config['extra'] ?? []);
+            $user = $config['user'] ?? $user;
+            $level = $config['level'] ?? $level;
+        }
 
         $logger->adaptor->setContext('env', $env);
         $logger->adaptor->setContext('tags', $tags);

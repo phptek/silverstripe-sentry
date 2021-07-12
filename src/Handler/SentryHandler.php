@@ -40,7 +40,7 @@ class SentryHandler extends AbstractProcessingHandler
     /**
      * @var SentryAdaptor|null
      */
-    private $client = null;
+    private $adaptor = null;
 
     /**
      * @param  int     $level
@@ -50,9 +50,7 @@ class SentryHandler extends AbstractProcessingHandler
      */
     public function __construct($level = null, bool $bubble = true, array $config = [])
     {
-        // Returns an instance of {@link SentryLogger}
-        $logger = SentryLogger::factory($config);
-        $this->client = $logger->getAdaptor();
+        $this->adaptor = SentryLogger::factory($config)->getAdaptor();
 
         // Constructor args take precedence, then fallback to YML config or Logger::Debug
         $level = $level ?: $this->config()->get('log_level');
@@ -86,11 +84,11 @@ class SentryHandler extends AbstractProcessingHandler
         ]);
 
         // For reasons..this is the only spot where we're able to getCurrentUser()
-        $this->client->setContext('user', SentryLogger::user_data(Security::getCurrentUser()));
+        $this->adaptor->setContext('user', SentryLogger::user_data(Security::getCurrentUser()));
 
         // Create a Sentry EventHint and pass an instance of Stacktrace to it.
         // See SentryAdaptor: We explicitly enable/disable default (Sentry) stacktraces.
-        if ($this->getClient()->config()->get('custom_stacktrace')) {
+        if ($this->adaptor->config()->get('custom_stacktrace')) {
             $eventHint = EventHint::fromArray([
                 'stacktrace' => new Stacktrace(SentryLogger::backtrace($record)),
             ]);
@@ -100,27 +98,19 @@ class SentryHandler extends AbstractProcessingHandler
                 isset($record['context']['exception']) &&
                 $record['context']['exception'] instanceof Throwable
         ) {
-            $this->client->getSDK()->captureException(
+            $this->adaptor->getSDK()->captureException(
                 $record['context']['exception'],
-                $this->client->getContext(),
+                $this->adaptor->getContext(),
                 $eventHint ?? null
             );
         } else {
-            $this->client->getSDK()->captureMessage(
+            $this->adaptor->getSDK()->captureMessage(
                 $record['formatted'],
                 new Severity(SentrySeverity::process_severity($record['level_name'])),
-                $this->client->getContext(),
+                $this->adaptor->getContext(),
                 $eventHint ?? null
             );
         }
-    }
-
-    /**
-     * @return SentryAdaptor
-     */
-    public function getClient(): SentryAdaptor
-    {
-        return $this->client;
     }
 
 }

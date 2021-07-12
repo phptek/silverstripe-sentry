@@ -68,10 +68,10 @@ class SentryAdaptor
      *
      * @param  string $field
      * @param  mixed  $data
-     * @return void
+     * @return mixed null|void
      * @throws SentryLogWriterException
      */
-    public function setContext(string $field, $data): void
+    public function setContext(string $field, $data)
     {
         $hub = SentrySdk::getCurrentHub();
         $options = $hub->getClient()->getOptions();
@@ -85,7 +85,7 @@ class SentryAdaptor
                 $this->context['env'] = $data;
                 break;
             case 'tags':
-                $hub->configureScope(function (Scope $scope) use ($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data): void {
                     foreach ($data as $tagName => $tagData) {
                         $tagName = SentryHelper::normalise_key($tagName);
                         $scope->setTag($tagName, $tagData);
@@ -94,13 +94,13 @@ class SentryAdaptor
                 });
                 break;
             case 'user':
-                $hub->configureScope(function (Scope $scope) use ($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data): void {
                     $scope->setUser($data, true);
                     $this->context['user'] = $data;
                 });
                 break;
             case 'extra':
-                $hub->configureScope(function (Scope $scope) use ($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data): void {
                     foreach ($data as $extraKey => $extraData) {
                         $extraKey = SentryHelper::normalise_key($extraKey);
                         $scope->setExtra($extraKey, $extraData);
@@ -109,7 +109,7 @@ class SentryAdaptor
                 });
                 break;
             case 'level':
-                $hub->configureScope(function (Scope $scope) use ($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data): void {
                     $scope->setLevel(new Severity(SentrySeverity::process_severity($level = $data)));
                 });
                 break;
@@ -135,14 +135,18 @@ class SentryAdaptor
 
         $scope->setUser($this->context['user']);
 
-        foreach ($this->context['tags'] as $tagKey => $tagData) {
-            $tagKey = SentryHelper::normalise_key($tagKey);
-            $scope->setTag($tagKey, $tagData);
+        if (!empty($this->context['tags'])) {
+            foreach ($this->context['tags'] as $tagKey => $tagData) {
+                $tagKey = SentryHelper::normalise_key($tagKey);
+                $scope->setTag($tagKey, $tagData);
+            }
         }
 
-        foreach ($this->context['extra'] as $extraKey => $extraData) {
-            $extraKey = SentryHelper::normalise_key($extraKey);
-            $scope->setExtra($extraKey, $extraData);
+        if (!empty($this->context['tags'])) {
+            foreach ($this->context['extra'] as $extraKey => $extraData) {
+                $extraKey = SentryHelper::normalise_key($extraKey);
+                $scope->setExtra($extraKey, $extraData);
+            }
         }
 
         return $scope;
