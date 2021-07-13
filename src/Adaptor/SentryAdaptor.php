@@ -74,7 +74,6 @@ class SentryAdaptor
      * @param  string $field
      * @param  mixed  $data
      * @return mixed null|void
-     * @throws SentryLogWriterException
      */
     public function setContext(string $field, $data)
     {
@@ -119,8 +118,7 @@ class SentryAdaptor
                 });
                 break;
             default:
-                $msg = sprintf('Unknown field "%s" passed to %s().', $field, __FUNCTION__);
-                throw new SentryLogWriterException($msg);
+                return;
         }
     }
 
@@ -138,18 +136,20 @@ class SentryAdaptor
     {
         $scope = new Scope();
 
-        $scope->setUser($this->context['user']);
+        if (!empty($this->context['user'])) {
+            $scope->setUser($this->context['user']);
+        }
 
         if (!empty($this->context['tags'])) {
             foreach ($this->context['tags'] as $tagKey => $tagData) {
-                $tagKey = SentryHelper::normalise_key($tagKey);
+                $tagKey = SentryHelper::normalise_tag_name($tagKey);
                 $scope->setTag($tagKey, $tagData);
             }
         }
 
-        if (!empty($this->context['tags'])) {
+        if (!empty($this->context['extra'])) {
             foreach ($this->context['extra'] as $extraKey => $extraData) {
-                $extraKey = SentryHelper::normalise_key($extraKey);
+                $extraKey = SentryHelper::normalise_info_name($extraKey);
                 $scope->setExtra($extraKey, $extraData);
             }
         }
