@@ -17,6 +17,7 @@ use Sentry\Severity;
 use Sentry\SentrySdk;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Environment as Env;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
 use PhpTek\Sentry\Helper\SentryHelper;
@@ -27,7 +28,8 @@ use PhpTek\Sentry\Helper\SentryHelper;
  */
 class SentryAdaptor
 {
-    use Configurable;
+    use Configurable,
+        Injectable;
 
     /**
      * @var ClientInterface

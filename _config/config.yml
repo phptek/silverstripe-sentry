@@ -7,6 +7,6 @@ PhpTek\Sentry\Log\SentryLogger:
     adaptor: '%$PhpTek\Sentry\Adaptor\SentryAdaptor'
 
 SilverStripe\Core\Injector\Injector:
-  Psr\Log\LoggerInterface:
+  Monolog\Logger:
     calls:
       - [ pushHandler, [ '%$PhpTek\Sentry\Handler\SentryHandler' ]]

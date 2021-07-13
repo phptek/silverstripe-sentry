@@ -33,12 +33,12 @@ class SentryHandler extends AbstractProcessingHandler
         Configurable;
 
     /**
-     * @config
+     * @var mixed int|null
      */
     private static $log_level = null;
 
     /**
-     * @var SentryAdaptor|null
+     * @var mixed SentryAdaptor|null
      */
     private $adaptor = null;
 
