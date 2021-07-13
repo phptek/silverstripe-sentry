@@ -92,7 +92,7 @@ class SentryAdaptor
             case 'tags':
                 $hub->configureScope(function (Scope $scope) use ($data): void {
                     foreach ($data as $tagName => $tagData) {
-                        $tagName = SentryHelper::normalise_key($tagName);
+                        $tagName = SentryHelper::normalise_tag_name($tagName);
                         $scope->setTag($tagName, $tagData);
                         $this->context['tags'][$tagName] = $tagData;
                     }
@@ -107,7 +107,7 @@ class SentryAdaptor
             case 'extra':
                 $hub->configureScope(function (Scope $scope) use ($data): void {
                     foreach ($data as $extraKey => $extraData) {
-                        $extraKey = SentryHelper::normalise_key($extraKey);
+                        $extraKey = SentryHelper::normalise_info_name($extraKey);
                         $scope->setExtra($extraKey, $extraData);
                         $this->context['extra'][$extraKey] = $extraData;
                     }

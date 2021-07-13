@@ -12,13 +12,24 @@ namespace PhpTek\Sentry\Helper;
 class SentryHelper
 {
     /**
-     * Normalise a key ready for display within Sentry's UI.
+     * Normalise a tag-key ready for display within Sentry's UI.
      *
      * @param  string $key
      * @return string
      */
-    public static function normalise_key(string $key): string
+    public static function normalise_tag_name(string $key): string
     {
         return strtolower(preg_replace("#[\-_\s]+#", '.', trim($key)));
+    }
+
+    /**
+     * Normalise an "Additional Info" key ready for display within Sentry's UI.
+     *
+     * @param  string $key
+     * @return string
+     */
+    public static function normalise_info_name(string $key): string
+    {
+        return ucwords(strtolower(preg_replace("#[\-_]+#", ' ', trim($key))));
     }
 }
