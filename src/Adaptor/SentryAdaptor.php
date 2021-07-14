@@ -9,15 +9,11 @@
 
 namespace PhpTek\Sentry\Adaptor;
 
-use Sentry\State\Hub;
-use Sentry\ClientBuilder;
 use Sentry\State\Scope;
-use Sentry\ClientInterface;
 use Sentry\Severity;
 use Sentry\SentrySdk;
-use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Environment as Env;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
 use PhpTek\Sentry\Helper\SentryHelper;
@@ -28,14 +24,6 @@ use PhpTek\Sentry\Helper\SentryHelper;
  */
 class SentryAdaptor
 {
-    use Configurable,
-        Injectable;
-
-    /**
-     * @var ClientInterface
-     */
-    protected $sentry;
-
     /**
      * Internal storage for context. Used only when non-exception
      * data is sent to Sentry instance.
@@ -48,25 +36,6 @@ class SentryAdaptor
         'extra' => [],
         'user' => [],
     ];
-
-    /**
-     * @return void
-     */
-    public function __construct()
-    {
-        $client = ClientBuilder::create($this->getOpts() ?: [])->getClient();
-        SentrySdk::setCurrentHub(new Hub($client));
-
-        $this->sentry = $client;
-    }
-
-    /**
-     * @return ClientInterface
-     */
-    public function getSDK(): ClientInterface
-    {
-        return $this->sentry;
-    }
 
     /**
      * Configures Sentry "context" to display additional information about a SilverStripe
@@ -82,7 +51,7 @@ class SentryAdaptor
         $options = $hub->getClient()->getOptions();
 
         // Use Sentry's own default stacktrace. This was the default prior to v4
-        $options->setAttachStacktrace((bool) !$this->config()->get('custom_stacktrace'));
+        $options->setAttachStacktrace((bool) !self::get_opts('custom_stacktrace'));
 
         switch ($field) {
             case 'env':
@@ -141,31 +110,27 @@ class SentryAdaptor
             $scope->setUser($this->context['user']);
         }
 
-        if (!empty($this->context['tags'])) {
-            foreach ($this->context['tags'] as $tagKey => $tagData) {
-                $tagKey = SentryHelper::normalise_tag_name($tagKey);
-                $scope->setTag($tagKey, $tagData);
-            }
+        foreach ($this->context['tags'] ?? [] as $tagKey => $tagData) {
+            $tagKey = SentryHelper::normalise_tag_name($tagKey);
+            $scope->setTag($tagKey, $tagData);
         }
 
-        if (!empty($this->context['extra'])) {
-            foreach ($this->context['extra'] as $extraKey => $extraData) {
-                $extraKey = SentryHelper::normalise_info_name($extraKey);
-                $scope->setExtra($extraKey, $extraData);
-            }
+        foreach ($this->context['extra'] ?? [] as $extraKey => $extraData) {
+            $extraKey = SentryHelper::normalise_info_name($extraKey);
+            $scope->setExtra($extraKey, $extraData);
         }
 
         return $scope;
     }
 
     /**
-     * Get various userland options to pass to Raven. Includes detecting and setting
+     * Get various userland options to pass to Sentry. Includes detecting and setting
      * proxy options too.
      *
      * @param  string $opt
      * @return mixed  string|array Depending on whether $opts is passed.
      */
-    public function getOpts(string $opt = '')
+    public static function get_opts(string $opt = '')
     {
         $opts = [];
 
@@ -175,10 +140,11 @@ class SentryAdaptor
         }
 
         // Env vars take precedence over YML config in array_merge()
+        $optsConfig = Config::inst()->get(static::class, 'opts');
         $opts = Injector::inst()
-            ->convertServiceProperty(array_merge($this->config()->get('opts') ?? [], $opts));
+            ->convertServiceProperty(array_merge($optsConfig, $opts));
 
-        // Deal with proxy settings. Raven_Client permits host:port format but SilverStripe's
+        // Deal with proxy settings. Sentry permits host:port format but SilverStripe's
         // YML config only permits single backtick-enclosed env/consts per config
         if (!empty($opts['http_proxy'])) {
             if (!empty($opts['http_proxy']['host']) && !empty($opts['http_proxy']['port'])) {
@@ -190,7 +156,7 @@ class SentryAdaptor
             }
         }
 
-        return $opts[$opt] ?? $opts;
+        return $opt ? ($opts[$opt] ?? null) : $opts;
     }
 
 }

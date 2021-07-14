@@ -59,7 +59,7 @@ class SentryLogger
      */
     public static function factory(array $config = []): SentryLogger
     {
-        $logger = Injector::inst()->get(static::class);
+        $logger = new static();
         $env = $logger->defaultEnv();
         $tags = $logger->defaultTags();
         $extra = $logger->defaultExtra();
@@ -74,21 +74,15 @@ class SentryLogger
             $level = $config['level'] ?? $level;
         }
 
-        $logger->adaptor->setContext('env', $env);
-        $logger->adaptor->setContext('tags', $tags);
-        $logger->adaptor->setContext('extra', $extra);
-        $logger->adaptor->setContext('user', $user);
-        $logger->adaptor->setContext('level', $level);
+        $logger->adaptor = new SentryAdaptor();
+
+        // $logger->adaptor->setContext('env', $env);
+        // $logger->adaptor->setContext('tags', $tags);
+        // $logger->adaptor->setContext('extra', $extra);
+        // $logger->adaptor->setContext('user', $user);
+
 
         return $logger;
-    }
-
-    /**
-     * @return SentryAdaptor
-     */
-    public function getAdaptor(): SentryAdaptor
-    {
-        return $this->adaptor;
     }
 
     /**
