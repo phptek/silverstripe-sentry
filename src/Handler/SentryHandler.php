@@ -12,6 +12,7 @@ namespace PhpTek\Sentry\Handler;
 use Throwable;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use Sentry\Severity;
 use Sentry\EventHint;
 use Sentry\Stacktrace;
@@ -22,7 +23,6 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Security\Security;
 use PhpTek\Sentry\Log\SentryLogger;
-use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
 
 /**
@@ -53,14 +53,14 @@ class SentryHandler extends AbstractProcessingHandler
      */
     public function __construct($level = null, bool $bubble = true, array $config = [])
     {
-        $this->client = ClientBuilder::create(SentryAdaptor::get_opts() ?: [])->getClient();
-        $this->logger = SentryLogger::factory($config);
-
-        SentrySdk::setCurrentHub(new Hub($this->client));
-
-        // Constructor args take precedence, then fallback to YML config or Logger::Debug
+        $client = ClientBuilder::create(SentryAdaptor::get_opts() ?: [])->getClient();
         $level = $level ?: $this->config()->get('log_level');
         $level = Logger::getLevels()[$level] ?? Logger::DEBUG;
+
+        SentrySdk::setCurrentHub(new Hub($client));
+
+        $this->logger = SentryLogger::factory($config, $client);
+        $this->client = $client;
 
         parent::__construct($level, $bubble);
     }
@@ -88,13 +88,14 @@ class SentryHandler extends AbstractProcessingHandler
         $record = array_merge($record, [
             'timestamp' => $record['datetime']->getTimestamp(),
         ]);
+        $adaptor = $this->logger->getAdaptor();
 
         // For reasons..this is the only spot where we're able to getCurrentUser()
-        SentryAdaptor::set_context('user', SentryLogger::user_data(Security::getCurrentUser()));
+        $adaptor->setContext('user', SentryLogger::user_data(Security::getCurrentUser()));
 
         // Create a Sentry EventHint and pass an instance of Stacktrace to it.
         // See SentryAdaptor: We explicitly enable/disable default (Sentry) stacktraces.
-        if (SentryAdaptor::get_opts('custom_stacktrace')) {
+        if ($adaptor::get_opts('custom_stacktrace')) {
             $eventHint = EventHint::fromArray([
                 'stacktrace' => new Stacktrace(SentryLogger::backtrace($record)),
             ]);
@@ -106,15 +107,15 @@ class SentryHandler extends AbstractProcessingHandler
         ) {
             $this->client->captureException(
                 $record['context']['exception'],
-                SentryAdaptor::get_context(),
-                $eventHint ?? null
+                $adaptor->getContext(),
+                isset($eventHint) ? $eventHint : null
             );
         } else {
             $this->client->captureMessage(
                 $record['formatted'],
                 new Severity(SentrySeverity::process_severity($record['level_name'])),
-                SentryAdaptor::get_context(),
-                $eventHint ?? null
+                $adaptor->getContext(),
+                isset($eventHint) ? $eventHint : null
             );
         }
     }

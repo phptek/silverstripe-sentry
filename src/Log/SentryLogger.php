@@ -12,6 +12,7 @@ namespace PhpTek\Sentry\Log;
 use Composer\InstalledVersions;
 use Monolog\Logger;
 use Sentry\Frame;
+use Sentry\Client;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
 use SilverStripe\Core\Injector\Injector;
@@ -55,9 +56,10 @@ class SentryLogger
      * @param  array $config    An array of optional additional configuration for
      *                          passing custom information to Sentry. See the README
      *                          for more detail.
+     * @param  Client $client
      * @return SentryLogger
      */
-    public static function factory(array $config = []): SentryLogger
+    public static function factory(array $config = [], Client $client): SentryLogger
     {
         $logger = new static();
         $env = $logger->defaultEnv();
@@ -74,15 +76,32 @@ class SentryLogger
             $level = $config['level'] ?? $level;
         }
 
-        $logger->adaptor = new SentryAdaptor();
+        $adaptor = (new SentryAdaptor($client))
+            ->setContext('env', $env)
+            ->setContext('tags', $tags)
+            ->setContext('extra', $extra)
+            ->setContext('user', $user);
 
-        // $logger->adaptor->setContext('env', $env);
-        // $logger->adaptor->setContext('tags', $tags);
-        // $logger->adaptor->setContext('extra', $extra);
-        // $logger->adaptor->setContext('user', $user);
+        return $logger->setAdaptor($adaptor);
+    }
 
+    /**
+     * @return SentryAdaptor
+     */
+    public function getAdaptor(): SentryAdaptor
+    {
+        return $this->adaptor;
+    }
 
-        return $logger;
+    /**
+     * @param  SentryAdaptor $adaptor
+     * @return SentryLogger
+     */
+    public function setAdaptor(SentryAdaptor $adaptor): SentryLogger
+    {
+        $this->adaptor = $adaptor;
+
+        return $this;
     }
 
     /**

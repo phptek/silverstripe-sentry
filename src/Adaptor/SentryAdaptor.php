@@ -9,9 +9,11 @@
 
 namespace PhpTek\Sentry\Adaptor;
 
+use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Severity;
 use Sentry\SentrySdk;
+use Sentry\Client;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Environment as Env;
@@ -38,6 +40,15 @@ class SentryAdaptor
     ];
 
     /**
+     * @param  Client $client
+     * @return void
+     */
+    public function __construct(Client $client)
+    {
+        SentrySdk::setCurrentHub(new Hub($client));
+    }
+
+    /**
      * Configures Sentry "context" to display additional information about a SilverStripe
      * application's runtime and context.
      *
@@ -45,7 +56,7 @@ class SentryAdaptor
      * @param  mixed  $data
      * @return mixed null|void
      */
-    public function setContext(string $field, $data)
+    public function setContext(string $field, $data): SentryAdaptor
     {
         $hub = SentrySdk::getCurrentHub();
         $options = $hub->getClient()->getOptions();
@@ -88,8 +99,10 @@ class SentryAdaptor
                 });
                 break;
             default:
-                return;
+                break;
         }
+
+        return $this;
     }
 
     /**
