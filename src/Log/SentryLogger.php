@@ -153,7 +153,7 @@ class SentryLogger
     public function defaultExtra(): array
     {
         return [
-            'php.peak.memory' => $this->getPeakMemory(),
+            'PHP Peak Memory' => $this->getPeakMemory(),
         ];
     }
 
@@ -302,7 +302,7 @@ class SentryLogger
         }
 
         return [
-            'IPAddress' => self::get_ip() ?: self::SLW_NOOP,
+            'IP Address' => self::get_ip() ?: self::SLW_NOOP,
             'ID'       => $member ? $member->getField('ID') : self::SLW_NOOP,
             'Email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
         ];

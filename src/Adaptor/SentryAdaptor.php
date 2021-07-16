@@ -87,7 +87,7 @@ class SentryAdaptor
             case 'extra':
                 $hub->configureScope(function (Scope $scope) use ($data): void {
                     foreach ($data as $extraKey => $extraData) {
-                        $extraKey = SentryHelper::normalise_info_name($extraKey);
+                        $extraKey = SentryHelper::normalise_extras_name($extraKey);
                         $scope->setExtra($extraKey, $extraData);
                         $this->context['extra'][$extraKey] = $extraData;
                     }
@@ -129,7 +129,7 @@ class SentryAdaptor
         }
 
         foreach ($this->context['extra'] ?? [] as $extraKey => $extraData) {
-            $extraKey = SentryHelper::normalise_info_name($extraKey);
+            $extraKey = SentryHelper::normalise_extras_name($extraKey);
             $scope->setExtra($extraKey, $extraData);
         }
 

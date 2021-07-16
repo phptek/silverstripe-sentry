@@ -12,7 +12,6 @@ namespace PhpTek\Sentry\Handler;
 use Throwable;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
-use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use Sentry\Severity;
 use Sentry\EventHint;
 use Sentry\Stacktrace;
@@ -23,6 +22,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Security\Security;
 use PhpTek\Sentry\Log\SentryLogger;
+use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
 
 /**
@@ -44,6 +44,13 @@ class SentryHandler extends AbstractProcessingHandler
      * @var mixed SentryLogger|null
      */
     private $logger = null;
+
+    /**
+     * Keeps track of the no. times this object is instantiated.
+     *
+     * @var int
+     */
+    private static $counter = 0;
 
     /**
      * @param  int     $level
@@ -85,6 +92,17 @@ class SentryHandler extends AbstractProcessingHandler
      */
     protected function write(array $record): void
     {
+        $isException = (
+            isset($record['context']['exception'])
+            && $record['context']['exception'] instanceof Throwable
+        );
+
+        // Ref #65: For some reason, throwing an exception finds its way into both exception + non-exception
+        // conditions below.
+        if ($isException) {
+            static::$counter ++;
+        }
+
         $record = array_merge($record, [
             'timestamp' => $record['datetime']->getTimestamp(),
         ]);
@@ -95,27 +113,32 @@ class SentryHandler extends AbstractProcessingHandler
 
         // Create a Sentry EventHint and pass an instance of Stacktrace to it.
         // See SentryAdaptor: We explicitly enable/disable default (Sentry) stacktraces.
+        $eventHint = null;
+
         if ($adaptor::get_opts('custom_stacktrace')) {
             $eventHint = EventHint::fromArray([
                 'stacktrace' => new Stacktrace(SentryLogger::backtrace($record)),
             ]);
         }
 
-        if (
-                isset($record['context']['exception']) &&
-                $record['context']['exception'] instanceof Throwable
-        ) {
+        if ($isException) {
             $this->client->captureException(
                 $record['context']['exception'],
                 $adaptor->getContext(),
-                isset($eventHint) ? $eventHint : null
+                $eventHint
             );
         } else {
+            // Ref #65 This works around the fact that somewhere in the bowels of Sentry or Monolog,
+            // we're managing to trigger the handler twice and send two messages, one of each kind.
+            if (static::$counter > 0) {
+                return;
+            }
+
             $this->client->captureMessage(
                 $record['formatted'],
                 new Severity(SentrySeverity::process_severity($record['level_name'])),
                 $adaptor->getContext(),
-                isset($eventHint) ? $eventHint : null
+                $eventHint
             );
         }
     }

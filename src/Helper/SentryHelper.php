@@ -28,8 +28,8 @@ class SentryHelper
      * @param  string $key
      * @return string
      */
-    public static function normalise_info_name(string $key): string
+    public static function normalise_extras_name(string $key): string
     {
-        return ucwords(strtolower(preg_replace("#[\-_]+#", ' ', trim($key))));
+        return ucwords(strtolower(trim($key)));
     }
 }
