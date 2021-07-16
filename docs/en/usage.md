@@ -155,7 +155,7 @@ The module comes with some pre-defined **tags** and **extras** that are always s
 By default, the module will render Sentry's own stacktraces into Sentry's UI. However, you can configure the module to skip recording Silverstripe's own debugging internals as well as those of the module:
 
 ```
-PhpTek\Sentry\Adaptor\SentryAdaptor:
+PhpTek\Sentry\Handler\SentryHandler:
   custom_stacktrace: true
 ```
 

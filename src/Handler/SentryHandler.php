@@ -21,6 +21,7 @@ use Sentry\ClientBuilder;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Security\Security;
+use SilverStripe\Core\Config\Config;
 use PhpTek\Sentry\Log\SentryLogger;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
@@ -115,7 +116,7 @@ class SentryHandler extends AbstractProcessingHandler
         // See SentryAdaptor: We explicitly enable/disable default (Sentry) stacktraces.
         $eventHint = null;
 
-        if ($adaptor::get_opts('custom_stacktrace')) {
+        if (Config::inst()->get(static::class, 'custom_stacktrace')) {
             $eventHint = EventHint::fromArray([
                 'stacktrace' => new Stacktrace(SentryLogger::backtrace($record)),
             ]);

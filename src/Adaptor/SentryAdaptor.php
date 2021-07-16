@@ -140,10 +140,9 @@ class SentryAdaptor
      * Get various userland options to pass to Sentry. Includes detecting and setting
      * proxy options too.
      *
-     * @param  string $opt
-     * @return mixed  string|array Depending on whether $opts is passed.
+     * @return array
      */
-    public static function get_opts(string $opt = '')
+    public static function get_opts(): array
     {
         $opts = [];
 
@@ -169,7 +168,7 @@ class SentryAdaptor
             }
         }
 
-        return $opt ? ($opts[$opt] ?? null) : $opts;
+        return $opts;
     }
 
 }
