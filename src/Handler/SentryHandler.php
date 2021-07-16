@@ -31,9 +31,7 @@ use PhpTek\Sentry\Adaptor\SentrySeverity;
  */
 class SentryHandler extends AbstractProcessingHandler
 {
-
-    use Injectable,
-        Configurable;
+    use Injectable;
 
     /**
      * @var mixed int|null
@@ -53,14 +51,17 @@ class SentryHandler extends AbstractProcessingHandler
      */
     public function __construct($level = null, bool $bubble = true, array $config = [])
     {
-        $client = ClientBuilder::create(SentryAdaptor::get_opts() ?: [])->getClient();
-        $level = $level ?: $this->config()->get('log_level');
-        $level = Logger::getLevels()[$level] ?? Logger::DEBUG;
+        $client = ClientBuilder::create([])->getClient();
+        // ^^ THIS Commented: x1 error displayed. None sent to Sentry
+        //$level = $level ?: $this->config()->get('log_level');
+        //$level = Logger::getLevels()[$level] ?? Logger::DEBUG;
+        $level = 100;
 
         SentrySdk::setCurrentHub(new Hub($client));
+        // ^^ THIS Un-Commented AND $client Uncommented x2 error displayed. None sent to Sentry
 
-        $this->logger = SentryLogger::factory($config, $client);
-        $this->client = $client;
+        //$this->logger = SentryLogger::factory($config, $client);
+        //$this->client = $client;
 
         parent::__construct($level, $bubble);
     }
@@ -83,8 +84,9 @@ class SentryHandler extends AbstractProcessingHandler
      *
      * @return void
      */
-    protected function write(array $record): void
+    protected function write(array $record)
     {
+        return null;
         $record = array_merge($record, [
             'timestamp' => $record['datetime']->getTimestamp(),
         ]);
