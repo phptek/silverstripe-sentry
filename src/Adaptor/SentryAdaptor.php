@@ -10,16 +10,15 @@
 namespace PhpTek\Sentry\Adaptor;
 
 use Sentry\State\Hub;
-use Sentry\ClientBuilder;
 use Sentry\State\Scope;
-use Sentry\ClientInterface;
 use Sentry\Severity;
 use Sentry\SentrySdk;
-use SilverStripe\Core\Config\Configurable;
+use Sentry\Client;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Environment as Env;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
-use PhpTek\Sentry\Exception\SentryLogWriterException;
+use PhpTek\Sentry\Helper\SentryHelper;
 
 /**
  * The SentryAdaptor provides a functionality bridge between the getsentry/sentry
@@ -27,38 +26,26 @@ use PhpTek\Sentry\Exception\SentryLogWriterException;
  */
 class SentryAdaptor
 {
-    use Configurable;
-
     /**
-     * @var ClientInterface
-     */
-    protected $sentry;
-
-    /**
-     * Internal storage for context. Used only in the case of non-exception
-     * data sent to Sentry.
+     * Internal storage for context. Used only when non-exception
+     * data is sent to Sentry instance.
      *
      * @var array
      */
-    protected $context = [];
+    protected $context = [
+        'env' => '',
+        'tags' => [],
+        'extra' => [],
+        'user' => [],
+    ];
 
     /**
+     * @param  Client $client
      * @return void
      */
-    public function __construct()
+    public function __construct(Client $client)
     {
-        $client = ClientBuilder::create($this->getOpts() ?: [])->getClient();
         SentrySdk::setCurrentHub(new Hub($client));
-
-        $this->sentry = $client;
-    }
-
-    /**
-     * @return ClientInterface
-     */
-    public function getSDK(): ClientInterface
-    {
-        return $this->sentry;
     }
 
     /**
@@ -67,14 +54,15 @@ class SentryAdaptor
      *
      * @param  string $field
      * @param  mixed  $data
-     * @return void
-     * @throws SentryLogWriterException
+     * @return mixed null|void
      */
-    public function setContext(string $field, $data): void
+    public function setContext(string $field, $data): SentryAdaptor
     {
         $hub = SentrySdk::getCurrentHub();
         $options = $hub->getClient()->getOptions();
-        $options->setAttachStacktrace(true);
+
+        // Use Sentry's own default stacktrace. This was the default prior to v4
+        $options->setAttachStacktrace((bool) !self::get_opts('custom_stacktrace'));
 
         switch ($field) {
             case 'env':
@@ -82,36 +70,39 @@ class SentryAdaptor
                 $this->context['env'] = $data;
                 break;
             case 'tags':
-                $hub->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data): void {
                     foreach ($data as $tagName => $tagData) {
+                        $tagName = SentryHelper::normalise_tag_name($tagName);
                         $scope->setTag($tagName, $tagData);
                         $this->context['tags'][$tagName] = $tagData;
                     }
                 });
                 break;
             case 'user':
-                $hub->configureScope(function (Scope $scope) use($data) : void {
-                    $scope->setUser($data, true);
+                $hub->configureScope(function (Scope $scope) use ($data): void {
+                    $scope->setUser($data);
                     $this->context['user'] = $data;
                 });
                 break;
             case 'extra':
-                $hub->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data): void {
                     foreach ($data as $extraKey => $extraData) {
+                        $extraKey = SentryHelper::normalise_extras_name($extraKey);
                         $scope->setExtra($extraKey, $extraData);
                         $this->context['extra'][$extraKey] = $extraData;
                     }
                 });
                 break;
             case 'level':
-                $hub->configureScope(function (Scope $scope) use($data) : void {
+                $hub->configureScope(function (Scope $scope) use ($data): void {
                     $scope->setLevel(new Severity(SentrySeverity::process_severity($level = $data)));
                 });
                 break;
             default:
-                $msg = sprintf('Unknown field "%s" passed to %s().', $field, __FUNCTION__);
-                throw new SentryLogWriterException($msg);
+                break;
         }
+
+        return $this;
     }
 
     /**
@@ -128,13 +119,17 @@ class SentryAdaptor
     {
         $scope = new Scope();
 
-        $scope->setUser($this->context['user']);
+        if (!empty($this->context['user'])) {
+            $scope->setUser($this->context['user']);
+        }
 
-        foreach ($this->context['tags'] as $tagKey => $tagData) {
+        foreach ($this->context['tags'] ?? [] as $tagKey => $tagData) {
+            $tagKey = SentryHelper::normalise_tag_name($tagKey);
             $scope->setTag($tagKey, $tagData);
         }
 
-        foreach ($this->context['extra'] as $extraKey => $extraData) {
+        foreach ($this->context['extra'] ?? [] as $extraKey => $extraData) {
+            $extraKey = SentryHelper::normalise_extras_name($extraKey);
             $scope->setExtra($extraKey, $extraData);
         }
 
@@ -142,13 +137,12 @@ class SentryAdaptor
     }
 
     /**
-     * Get various userland options to pass to Raven. Includes detecting and setting
+     * Get various userland options to pass to Sentry. Includes detecting and setting
      * proxy options too.
      *
-     * @param  string $opt
-     * @return mixed  string|array|null depending on whether $opts is passed.
+     * @return array
      */
-    protected function getOpts(string $opt = '')
+    public static function get_opts(): array
     {
         $opts = [];
 
@@ -158,10 +152,11 @@ class SentryAdaptor
         }
 
         // Env vars take precedence over YML config in array_merge()
+        $optsConfig = Config::inst()->get(static::class, 'opts');
         $opts = Injector::inst()
-            ->convertServiceProperty(array_merge($this->config()->get('opts') ?? [], $opts));
+            ->convertServiceProperty(array_merge($optsConfig, $opts));
 
-        // Deal with proxy settings. Raven_Client permits host:port format but SilverStripe's
+        // Deal with proxy settings. Sentry permits host:port format but SilverStripe's
         // YML config only permits single backtick-enclosed env/consts per config
         if (!empty($opts['http_proxy'])) {
             if (!empty($opts['http_proxy']['host']) && !empty($opts['http_proxy']['port'])) {
@@ -173,14 +168,7 @@ class SentryAdaptor
             }
         }
 
-        if ($opt && !empty($opts[$opt])) {
-            // Return one
-            return $opts[$opt];
-        } else if (!$opt) {
-            // Return all
-            return $opts;
-        }
-
-        return null;
+        return $opts;
     }
+
 }
