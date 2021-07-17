@@ -91,6 +91,10 @@ $logger->warning('TEST: WARN'); // Sent
 $logger->error('TEST: ERROR');  // Sent
 ```
 
+You can test how these messages appear in Sentry itself, by running the test task:
+
+    ./vendor/bin/sake dev/tasks/PhpTek-Sentry-Tasks-SentryTestConnectionTask
+
 ## Tags and Extras
 
 Sentry allows for custom key-value pairs to be recorded against each message that it is sent.
@@ -129,7 +133,7 @@ instead.
     // Alternative syntax to send an `ERROR` level message
     $logger->log('ERROR', 'Help, my curry is too hot. I only asked for mild.');
 
-The module comes with some pre-defined **tags** and **extras** that are always shown in the "Tags" tab and in the tags "lozenges" at the top of the main "Details" tab within Sentry itself:
+The module comes with some pre-defined **tags** and **extras** that are always shown in the "Tags" tab and in the tags "lozenges" at the top of the main "Details" tab within Sentry's UI itself:
 
 ### Default Tags
 
@@ -142,13 +146,13 @@ The module comes with some pre-defined **tags** and **extras** that are always s
 
 ### Default Extras
 
-* **php.peak.memory**: The amount of peak memory (in Mb) consumed at the time the message was sent
+* **PHP Peak Memory**: The amount of peak memory (in Mb) consumed at the time the message was sent
 
 ### Default User Data
 
 * **Email**: The value of the current Silverstripe user's `Member::Email` field (If not scrubbed in Sentry's settings)
 * **ID**: The value of the current Silverstripe user's `Member::ID` field
-* **IPAddress**: The value of the originating IP address of the request at the time the message was sent to Sentry
+* **IP Address**: The value of the originating IP address of the request at the time the message was sent to Sentry
 
 ## Stacktraces
 
