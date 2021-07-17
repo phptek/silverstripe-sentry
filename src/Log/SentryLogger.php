@@ -133,12 +133,12 @@ class SentryLogger
     public function defaultTags(): array
     {
         return [
-            'request.method'=> $this->getReqMethod(),
-            'request.type' => $this->getRequestType(),
-            'php.sapi' => $this->getSAPI(),
-            'silverstripe.framework.version' => $this->getPackageInfo('silverstripe/framework'),
-            'phptek.sentry.version' => $this->getPackageInfo('phptek/sentry'),
-            'app' => $this->getAppInfo(),
+            'request.method'=> self::get_req_method(),
+            'request.type' => self::get_req_type(),
+            'php.sapi' => self::get_sapi(),
+            'silverstripe.framework.version' => self::get_package_info('silverstripe/framework'),
+            'phptek.sentry.version' => self::get_package_info('phptek/sentry'),
+            'app' => self::get_app_info(),
         ];
     }
 
@@ -153,7 +153,7 @@ class SentryLogger
     public function defaultExtra(): array
     {
         return [
-            'PHP Peak Memory' => $this->getPeakMemory(),
+            'PHP Peak Memory' => self::get_peak_memory(),
         ];
     }
 
@@ -163,9 +163,9 @@ class SentryLogger
      *
      * @return string
      */
-    public function getRequestType(): string
+    public static function get_req_type(): string
     {
-        $isCLI = $this->getSAPI() !== 'cli';
+        $isCLI = self::get_sapi() !== 'cli';
         $isAjax = Director::is_ajax();
 
         return $isCLI && $isAjax ? 'AJAX' : 'Non-Ajax';
@@ -176,7 +176,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getPeakMemory(): string
+    public static function get_peak_memory(): string
     {
         $peak = memory_get_peak_usage(true) / 1024 / 1024;
 
@@ -198,7 +198,7 @@ class SentryLogger
      *
      * @return string
      */
-    public function getReqMethod(): string
+    public static function get_req_method(): string
     {
         return $_SERVER['REQUEST_METHOD'] ?? self::SLW_NOOP;
     }
@@ -206,7 +206,7 @@ class SentryLogger
     /**
      * @return string
      */
-    public function getSAPI(): string
+    public static function get_sapi(): string
     {
         return php_sapi_name();
     }
@@ -215,7 +215,7 @@ class SentryLogger
      * @param  string $package
      * @return string
      */
-    public function getPackageInfo(string $package): string
+    public static function get_package_info(string $package): string
     {
         return InstalledVersions::getVersion(trim($package)) ?? self::SLW_NOOP;
     }
@@ -225,7 +225,7 @@ class SentryLogger
      *
      * @return string
      */
-    private function getAppInfo(): string
+    public static function get_app_info(): string
     {
         $meta = InstalledVersions::getRootPackage();
         $data = [
