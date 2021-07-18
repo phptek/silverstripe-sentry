@@ -19,8 +19,7 @@ This module binds Sentry.io and hosted Sentry installations, to the Monlog error
 
 ## Setup:
 
-    composer require phptek/sentry:^4
-
+    composer require phptek/sentry
 
 ## Notes:
 
@@ -83,7 +82,7 @@ The following will get you errors reported just in `test` and `live` but not `de
         dsn: null
     ---
 
-Please review the [usage docs](docs/usage.md) for further configuration and customisation options.
+Please review the [usage docs](docs/en/usage.md) for further configuration and customisation options.
 
 Notes:
 
@@ -123,7 +122,7 @@ mysite/_config.php:
 
 ## Usage
 
-Sentry is normally setup once in your project's YML config or `_config.php` file. See the above examples and the [usage docs](docs/usage.md) for details and options.
+Sentry is normally setup once in your project's YML config or `_config.php` file. See the above examples and the [usage docs](docs/en/usage.md) for details and options.
 
 ## Support Me
 
