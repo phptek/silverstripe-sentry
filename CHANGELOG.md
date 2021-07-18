@@ -1,4 +1,4 @@
-# Release v[4.0.0](https://github.com/phptek/silverstripe-sentry/commits/3.0.0)
+# Release v[4.0.0](https://github.com/phptek/silverstripe-sentry/commits/4.0.0)
 
 * 5e0d18b (HEAD -> 4.0, tag: 4.0.0, origin/4.0) NEW: Refs #29 from @halles Adds a connection test task.
 * 7388608 Converted class methods into statics in SentryLogger.php
