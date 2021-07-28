@@ -152,7 +152,8 @@ class SentryAdaptor
         }
 
         // Env vars take precedence over YML config in array_merge()
-        $optsConfig = Config::inst()->get(static::class, 'opts');
+        $optsConfig = Config::inst()->get(static::class, 'opts') ?? [];
+
         $opts = Injector::inst()
             ->convertServiceProperty(array_merge($optsConfig, $opts));
 
