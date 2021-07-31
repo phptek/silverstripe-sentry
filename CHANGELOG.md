@@ -1,3 +1,14 @@
+# Release v[4.0.2](https://github.com/phptek/silverstripe-sentry/commits/4.0.2)
+
+03fe8b4 (tag: 4.0.2, origin/4.0, 4.0) FIX: Losened PHP version constraint.
+
+# Release v[4.0.1](https://github.com/phptek/silverstripe-sentry/commits/4.0.1)
+
+519a4e8 (tag: 4.0.1) Merge pull request #73 from elliot-sawyer/bugfix/opts-array
+28b510f ensure optsConfig returns an array if unset
+a2ea129 MINOR: Typo in CHANGELOG link
+9805438 MINOR: Fixed usage docs link in README. Updated CHANGELOG
+
 # Release v[4.0.0](https://github.com/phptek/silverstripe-sentry/commits/4.0.0)
 
 * 5e0d18b (HEAD -> 4.0, tag: 4.0.0, origin/4.0) NEW: Refs #29 from @halles Adds a connection test task.
