@@ -66,6 +66,8 @@ class SentryHandler extends AbstractProcessingHandler
         $level = Logger::getLevels()[$level] ?? Logger::DEBUG;
 
         SentrySdk::setCurrentHub(new Hub($client));
+        
+        $config['level'] = $level;
 
         $this->logger = SentryLogger::factory($config, $client);
         $this->client = $client;
