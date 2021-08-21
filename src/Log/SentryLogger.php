@@ -363,7 +363,7 @@ class SentryLogger
                 $item['raw_function'] ?? self::DEFAULT_FRAME_VAL,
                 $item['abs_filepath'] ?? self::DEFAULT_FRAME_VAL,
                 $item['vars'] ?? [],
-                $item['in_app'] ?? true,
+                $item['in_app'] ?? true
             );
         }, $filtered);
     }
