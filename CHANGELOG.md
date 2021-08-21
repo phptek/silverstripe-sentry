@@ -1,3 +1,11 @@
+# Release v[4.0.4](https://github.com/phptek/silverstripe-sentry/commits/4.0.4)
+
+a8d1e6f Fixes #75: Removed trailing comma from Frame constructor for max PHP compatibility
+
+# Release v[4.0.3](https://github.com/phptek/silverstripe-sentry/commits/4.0.3)
+
+1abdd19 Make sure log levels are consistent
+
 # Release v[4.0.2](https://github.com/phptek/silverstripe-sentry/commits/4.0.2)
 
 03fe8b4 (tag: 4.0.2, origin/4.0, 4.0) FIX: Losened PHP version constraint.
