@@ -138,7 +138,7 @@ class SentryHandler extends AbstractProcessingHandler
             }
 
             $this->client->captureMessage(
-                $record['formatted'],
+                $record['context']['message'],
                 new Severity(SentrySeverity::process_severity($record['level_name'])),
                 $adaptor->getContext(),
                 $eventHint
