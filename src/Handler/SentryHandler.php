@@ -123,6 +123,12 @@ class SentryHandler extends AbstractProcessingHandler
                 'stacktrace' => new Stacktrace(SentryLogger::backtrace($record)),
             ]);
         }
+        
+        // Ref #65 This works around the fact that somewhere in the bowels of Sentry or Monolog,
+        // we're managing to trigger the handler twice and send two messages, one of each kind.
+        if (static::$counter > 0) {
+            return;
+        }
 
         if ($isException) {
             $this->client->captureException(
@@ -131,14 +137,8 @@ class SentryHandler extends AbstractProcessingHandler
                 $eventHint
             );
         } else {
-            // Ref #65 This works around the fact that somewhere in the bowels of Sentry or Monolog,
-            // we're managing to trigger the handler twice and send two messages, one of each kind.
-            if (static::$counter > 0) {
-                return;
-            }
-
             $this->client->captureMessage(
-                $record['formatted'],
+                $record['message'],
                 new Severity(SentrySeverity::process_severity($record['level_name'])),
                 $adaptor->getContext(),
                 $eventHint
