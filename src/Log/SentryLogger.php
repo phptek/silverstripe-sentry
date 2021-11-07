@@ -69,7 +69,7 @@ class SentryLogger
         $level = Logger::DEBUG;
 
         if ($config) {
-            $env = $config['env'] ?? $level;
+            $env = $config['env'] ?? $env;
             $tags = array_merge($tags, $config['tags'] ?? []);
             $extra = array_merge($extra, $config['extra'] ?? []);
             $user = $config['user'] ?? $user;
