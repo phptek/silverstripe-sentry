@@ -1,3 +1,7 @@
+# Release v[4.0.6](https://github.com/phptek/silverstripe-sentry/commits/4.0.6)
+
+1699415 Fixes PR #79 Fix default environment value
+
 # Release v[4.0.5](https://github.com/phptek/silverstripe-sentry/commits/4.0.5)
 
 463983 Fixes PR #78 by using 'message' as key. Also prevents Exceptions from logging > once.
