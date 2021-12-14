@@ -1,3 +1,11 @@
+# Release v[4.0.7](https://github.com/phptek/silverstripe-sentry/commits/4.0.7)
+
+9c4f8e1 FIX: Reversed order of argas passed to SentryLogger::factory() to prevent strict warnings in PHP8 
+
+# Release v[4.0.5](https://github.com/phptek/silverstripe-sentry/commits/4.0.5)
+
+4639836 Fixes PR #78 by using 'message' as key. Also prevents Exceptions from logging > once.
+
 # Release v[4.0.4](https://github.com/phptek/silverstripe-sentry/commits/4.0.4)
 
 a8d1e6f Fixes #75: Removed trailing comma from Frame constructor for max PHP compatibility
