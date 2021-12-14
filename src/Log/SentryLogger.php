@@ -53,13 +53,13 @@ class SentryLogger
     /**
      * Factory, consumed by {@link SentryHandler}.
      *
+     * @param  Client $client
      * @param  array $config    An array of optional additional configuration for
      *                          passing custom information to Sentry. See the README
      *                          for more detail.
-     * @param  Client $client
      * @return SentryLogger
      */
-    public static function factory(array $config = [], Client $client): SentryLogger
+    public static function factory(Client $client, array $config = []): SentryLogger
     {
         $logger = new static();
         $env = $logger->defaultEnv();

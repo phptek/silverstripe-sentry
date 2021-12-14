@@ -69,7 +69,7 @@ class SentryHandler extends AbstractProcessingHandler
         
         $config['level'] = $level;
 
-        $this->logger = SentryLogger::factory($config, $client);
+        $this->logger = SentryLogger::factory($client, $config);
         $this->client = $client;
 
         parent::__construct($level, $bubble);
