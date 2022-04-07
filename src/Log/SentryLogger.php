@@ -21,6 +21,8 @@ use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use SilverStripe\Core\Config\Configurable;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
+use SilverStripe\Control\Controller;
+use SilverStripe\Core\Environment;
 
 /**
  * The SentryLogger class is a bridge between {@link SentryAdaptor} and
@@ -133,7 +135,7 @@ class SentryLogger
     public function defaultTags(): array
     {
         return [
-            'request.method'=> self::get_req_method(),
+            'request.method' => self::get_req_method(),
             'request.type' => self::get_req_type(),
             'php.sapi' => self::get_sapi(),
             'silverstripe.framework.version' => self::get_package_info('silverstripe/framework'),
@@ -254,31 +256,11 @@ class SentryLogger
      */
     public static function get_ip(): string
     {
-        $headerOverrideIP = null;
-
-        if (defined('TRUSTED_PROXY')) {
-            $headers = (defined('SS_TRUSTED_PROXY_IP_HEADER')) ?
-                [SS_TRUSTED_PROXY_IP_HEADER] :
-                null;
-
-            if (!$headers) {
-                // Backwards compatible defaults
-                $headers = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR'];
+        if (Controller::has_curr()) {
+            $controller = Controller::curr();
+            if ($request = $controller->getRequest()) {
+                return $request->getIP();
             }
-
-            foreach ($headers as $header) {
-                if (!empty($_SERVER[$header])) {
-                    $headerOverrideIP = $_SERVER[$header];
-
-                    break;
-                }
-            }
-        }
-
-        $proxy = Injector::inst()->create(TrustedProxyMiddleware::class);
-
-        if ($headerOverrideIP) {
-            return $proxy->getIPFromHeaderValue($headerOverrideIP);
         }
 
         if (isset($_SERVER['REMOTE_ADDR'])) {
@@ -355,7 +337,7 @@ class SentryLogger
             'PhpTek\\Sentry\\Logger\\SentryLogger::backtrace',
         ]);
 
-        return array_map(function($item) {
+        return array_map(function ($item) {
             return new Frame(
                 $item['function'] ?? self::DEFAULT_FRAME_VAL,
                 $item['file'] ?? self::DEFAULT_FRAME_VAL,
@@ -367,5 +349,4 @@ class SentryLogger
             );
         }, $filtered);
     }
-
 }
