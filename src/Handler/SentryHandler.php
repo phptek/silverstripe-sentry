@@ -11,7 +11,9 @@ namespace PhpTek\Sentry\Handler;
 
 use Throwable;
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\Level;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Sentry\Severity;
 use Sentry\EventHint;
 use Sentry\Stacktrace;
@@ -63,10 +65,10 @@ class SentryHandler extends AbstractProcessingHandler
     {
         $client = ClientBuilder::create(SentryAdaptor::get_opts() ?: [])->getClient();
         $level = $level ?: $this->config()->get('log_level');
-        $level = Logger::getLevels()[$level] ?? Logger::DEBUG;
+        $level = Level::fromName($level ?? Level::Debug->getName());
 
         SentrySdk::setCurrentHub(new Hub($client));
-        
+
         $config['level'] = $level;
 
         $this->logger = SentryLogger::factory($client, $config);
@@ -93,7 +95,7 @@ class SentryHandler extends AbstractProcessingHandler
      *
      * @return void
      */
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         $isException = (
             isset($record['context']['exception'])
@@ -106,7 +108,7 @@ class SentryHandler extends AbstractProcessingHandler
             static::$counter ++;
         }
 
-        $record = array_merge($record, [
+        $record = array_merge($record->toArray(), [
             'timestamp' => $record['datetime']->getTimestamp(),
         ]);
         $adaptor = $this->logger->getAdaptor();
@@ -123,7 +125,7 @@ class SentryHandler extends AbstractProcessingHandler
                 'stacktrace' => new Stacktrace(SentryLogger::backtrace($record)),
             ]);
         }
-        
+
         // Ref #65 This works around the fact that somewhere in the bowels of Sentry or Monolog,
         // we're managing to trigger the handler twice and send two messages, one of each kind.
         if (static::$counter > 0) {
