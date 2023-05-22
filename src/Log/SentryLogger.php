@@ -284,9 +284,9 @@ class SentryLogger
         }
 
         return [
-            'IP Address' => self::get_ip() ?: self::SLW_NOOP,
-            'ID'       => $member ? $member->getField('ID') : self::SLW_NOOP,
-            'Email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
+            'ip_address' => self::get_ip() ?: self::SLW_NOOP,
+            'id'       => $member ? $member->getField('ID') : self::SLW_NOOP,
+            'email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
         ];
     }
 
