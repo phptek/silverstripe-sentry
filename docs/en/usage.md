@@ -167,24 +167,14 @@ Note that this feature should be considered experimental/incomplete. It is unabl
 
 ## Releases
 
-You can configure the module to send release information back to Sentry itself. This allows you to configure a Sentry project with a VCS repository like Bitbucket for example, which prompts Sentry to display detailed metadata about the given release.
+You can send Sentry your app's release-tag which allows you to configure a Sentry project with a VCS repository like Bitbucket for example, which prompts Sentry to display detailed metadata about the given release. Just include the following as an environment variable, and it will be sent to Sentry:
+
+Note: The env variable name is clearly not going to fit with your team's standards, regardless of what it's named. Therefore it's expected that projects would simply comprise two ENV vars are assigned the same value in the same way for instance within your CI setup.
 
 ```
-PhpTek\Sentry\Adaptor\SentryAdaptor:
-  opts:
-    release: 2.1.4
+SENTRY_RELEASE_TAG=1.2.3.4
 ```
 
-Project maintainers don't really want to be manually modifying the release, each time a new one is created or deployed, so consider making this a placeholder and replacing it during a CI step e.g.
-
-```
-...
-    - step:
-      script:
-        - export CURRENT_VERSION=$( git branch | grep '\*' )
-        - sed -i 's#release: 0.0.0#release: $CURRENT_VERSION#' app/_config/logging.yml
-...
-```
 ## Proxies
 
 Should your app require outgoing traffic to be passed through a proxy, the following config will work:

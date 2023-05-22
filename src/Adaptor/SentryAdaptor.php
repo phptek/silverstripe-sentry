@@ -151,6 +151,10 @@ class SentryAdaptor
             $opts['dsn'] = $dsn;
         }
 
+        if ($release = Env::getEnv('SENTRY_RELEASE_TAG')) {
+            $opts['release'] = $release;
+        }
+
         // Env vars take precedence over YML config in array_merge()
         $optsConfig = Config::inst()->get(static::class, 'opts') ?? [];
 
