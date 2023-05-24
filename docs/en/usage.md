@@ -167,9 +167,9 @@ Note that this feature should be considered experimental/incomplete. It is unabl
 
 ## Releases
 
-You can send Sentry your app's release-tag which allows you to configure a Sentry project with a VCS repository like Bitbucket for example, which prompts Sentry to display detailed metadata about the given release. Just include the following as an environment variable, and it will be sent to Sentry:
+You can send Sentry your app's release-tag which causes it to attempt to relate bugs with a specific release, making it even easier to track the point at which an issue surfaced. 
 
-Note: The env variable name is clearly not going to fit with your team's standards, regardless of what it's named. Therefore it's expected that projects would simply comprise two ENV vars are assigned the same value in the same way for instance within your CI setup.
+Note: The module's env variable name (below) is clearly not going to fit with your team's standards, regardless of what it's named. In this case it's expected that projects simply comprise two ENV vars which are assigned the same value in the same way within your CI setup.
 
 ```
 SENTRY_RELEASE_TAG=1.2.3.4
