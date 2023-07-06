@@ -11,7 +11,8 @@ namespace PhpTek\Sentry\Handler;
 
 use Throwable;
 use Monolog\Handler\AbstractProcessingHandler;
-use Monolog\Logger;
+use Monolog\Level;
+use Monolog\LogRecord;
 use Sentry\Severity;
 use Sentry\EventHint;
 use Sentry\Stacktrace;
@@ -47,6 +48,11 @@ class SentryHandler extends AbstractProcessingHandler
     private $logger = null;
 
     /**
+     * @var mixed ClientBuilder|null
+     */
+    private $client = null;
+
+    /**
      * Keeps track of the no. times this object is instantiated.
      *
      * @var int
@@ -63,7 +69,7 @@ class SentryHandler extends AbstractProcessingHandler
     {
         $client = ClientBuilder::create(SentryAdaptor::get_opts() ?: [])->getClient();
         $level = $level ?: $this->config()->get('log_level');
-        $level = Logger::getLevels()[$level] ?? Logger::DEBUG;
+        $level = Level::fromName($level ?? Level::Debug->getName());
 
         SentrySdk::setCurrentHub(new Hub($client));
         
@@ -93,7 +99,7 @@ class SentryHandler extends AbstractProcessingHandler
      *
      * @return void
      */
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         $isException = (
             isset($record['context']['exception'])
@@ -106,7 +112,7 @@ class SentryHandler extends AbstractProcessingHandler
             static::$counter ++;
         }
 
-        $record = array_merge($record, [
+        $record = array_merge($record->toArray(), [
             'timestamp' => $record['datetime']->getTimestamp(),
         ]);
         $adaptor = $this->logger->getAdaptor();

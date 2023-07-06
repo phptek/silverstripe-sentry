@@ -13,9 +13,7 @@ This module binds Sentry.io and hosted Sentry installations, to the Monlog error
 
 ## Requirements
 
- * PHP >=7.0
- * SilverStripe ^4.0
- * `phptek/sentry` version 4.x (use 1.x for Silverstripe 3)
+ See `composer.json`.
 
 ## Setup:
 
@@ -23,6 +21,7 @@ This module binds Sentry.io and hosted Sentry installations, to the Monlog error
 
 ## Notes:
 
+* Version 5.x is aimed at Silverstripe 5.
 * Versions 2.x, 3.x and 4.x should work with the same Silverstripe v4 setups. v3+ simply use newer versions of the Sentry PHP SDK and have additional bugfixes and features.
 * Version 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor` and `SentryLogWriter` was renamed to `SentryLogger`, so your existing configuration(s) may need to be updated accordingly.
 
