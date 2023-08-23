@@ -10,13 +10,14 @@
 
 namespace PhpTek\Sentry\Tasks;
 
+use Monolog\Level;
 use Monolog\Logger;
+use PhpTek\Sentry\Handler\SentryHandler;
 use Psr\Log\LoggerInterface;
+use Silverstripe\Control\Director;
+use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\BuildTask;
-use SilverStripe\Control\HTTPRequest;
-use Silverstripe\Control\Director;
-use PhpTek\Sentry\Handler\SentryHandler;
 
 /**
  * Tests a connection to Sentry, without having to hack directly inside
@@ -49,7 +50,7 @@ class SentryTestConnectionTask extends BuildTask
         $logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
             ->pushHandler(SentryHandler::create());
 
-        foreach (array_keys(Logger::getLevels()) as $name) {
+        foreach (Level::NAMES as $name) {
             $func = strtolower($name);
             $logger->$func(sprintf("Testing Severity Level: %s", $name));
 
