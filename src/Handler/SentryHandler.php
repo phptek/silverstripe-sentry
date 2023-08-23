@@ -118,7 +118,8 @@ class SentryHandler extends AbstractProcessingHandler
         $adaptor = $this->logger->getAdaptor();
 
         // For reasons..this is the only spot where we're able to getCurrentUser()
-        $adaptor->setContext('user', SentryLogger::user_data(Security::getCurrentUser()));
+        $member = Security::getCurrentUser() ?: null;
+        $adaptor->setContext('user', SentryLogger::user_data($member));
 
         // Create a Sentry EventHint and pass an instance of Stacktrace to it.
         // See SentryAdaptor: We explicitly enable/disable default (Sentry) stacktraces.
