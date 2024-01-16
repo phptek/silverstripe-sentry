@@ -3,7 +3,7 @@
 /**
  * Class: SentryLogger.
  *
- * @author  Russell Michell 2017-2021 <russ@theruss.com>
+ * @author  Russell Michell 2017-2024 <russ@theruss.com>
  * @package phptek/sentry
  */
 
@@ -14,15 +14,12 @@ use Monolog\Logger;
 use Sentry\Frame;
 use Sentry\Client;
 use SilverStripe\Control\Director;
-use SilverStripe\Control\Middleware\TrustedProxyMiddleware;
-use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\Backtrace;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use SilverStripe\Core\Config\Configurable;
 use PhpTek\Sentry\Adaptor\SentryAdaptor;
 use SilverStripe\Control\Controller;
-use SilverStripe\Core\Environment;
 
 /**
  * The SentryLogger class is a bridge between {@link SentryAdaptor} and
@@ -31,6 +28,11 @@ use SilverStripe\Core\Environment;
 class SentryLogger
 {
     use Configurable;
+
+    /**
+     * @var string
+     */
+    public const DEFAULT_IP = '0.0.0.0';
 
     /**
      * @var SentryAdaptor
@@ -252,14 +254,15 @@ class SentryLogger
      * Returns the client IP address which originated this request.
      * Lifted and modified from SilverStripe 3's SS_HTTPRequest.
      *
-     * @return string
+     * @return mixed null|string
      */
-    public static function get_ip(): string
+    public static function get_ip(): ?string
     {
         if (Controller::has_curr()) {
             $controller = Controller::curr();
+
             if ($request = $controller->getRequest()) {
-                return $request->getIP() ?? '';
+                return $request->getIP();
             }
         }
 
@@ -267,7 +270,7 @@ class SentryLogger
             return $_SERVER['REMOTE_ADDR'];
         }
 
-        return '';
+        return null;
     }
 
     /**
@@ -284,7 +287,7 @@ class SentryLogger
         }
 
         return [
-            'ip_address' => self::get_ip() ?: self::SLW_NOOP,
+            'ip_address' => self::get_ip() ?? self::DEFAULT_IP,
             'id'       => $member ? $member->getField('ID') : self::SLW_NOOP,
             'email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
         ];
