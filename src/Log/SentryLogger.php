@@ -69,6 +69,8 @@ class SentryLogger
         $env = $logger->defaultEnv();
         $tags = $logger->defaultTags();
         $extra = $logger->defaultExtra();
+        $traces_sample_rate = $logger->defaultTracesSample();
+
         $user = [];
         $level = Logger::DEBUG;
 
@@ -78,15 +80,25 @@ class SentryLogger
             $extra = array_merge($extra, $config['extra'] ?? []);
             $user = $config['user'] ?? $user;
             $level = $config['level'] ?? $level;
+            $traces_sample_rate = $config['traces_sample_rate'] ?? $traces_sample_rate;
         }
 
         $adaptor = (new SentryAdaptor($client))
             ->setContext('env', $env)
             ->setContext('tags', $tags)
             ->setContext('extra', $extra)
-            ->setContext('user', $user);
+            ->setContext('user', $user)
+            ->setContext('traces_sample_rate', $traces_sample_rate);
 
-        return $logger->setAdaptor($adaptor);
+
+        $set_adaptor = $logger->setAdaptor($adaptor);
+
+        // trigger the performance tracing if set
+        if ($traces_sample_rate) {
+            $set_adaptor->getAdaptor()->startTransaction();
+        }
+
+        return $set_adaptor;
     }
 
     /**
@@ -159,6 +171,16 @@ class SentryLogger
         return [
             'PHP Peak Memory' => self::get_peak_memory(),
         ];
+    }
+
+    /**
+     * Returns a default empty array for traces_sample_rate, as this should be blank if not set manually
+     *
+     * @return array
+     */
+    public function defaultTracesSample(): array
+    {
+        return [];
     }
 
     /**
