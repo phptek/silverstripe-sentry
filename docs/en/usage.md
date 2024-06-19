@@ -1,15 +1,15 @@
 # Usage
 
-Once setup, everytime an `Exception` is thrown or PHP itself shuts down via `trigger_error()` etc or you "manually" trigger a log message to be sent to Sentry, all available data is automatically sent to your remote Sentry instance.
+Once setup, everytime an `Exception` is thrown or PHP itself shuts down via `trigger_error()` etc or you "manually" trigger a log message to be sent to your Sentry-compatible server, all available data is automatically sent to the server.s
 
-In addition to the module simply reporting all thrown `Exception`s, resulting in a stacktrace in Sentry itself, you can use Sentry as a simple logger with all the benefits of Sentry's tags and grouping. See the examples below.
+In addition to the module reporting all thrown `Exception`s which result in a stacktrace within Sentry or Glitchtip, the module can be used as a simple logger with all the benefits of Sentry's tagging and grouping. See the examples below.
 
 ## Environment
 
 For "manual" error-reporting, you can augment your message with some context. If an environment is not specified,
 the default is to use the return value of `Director::get_environment_type()`.
 
-SilverStripe 4 uses `Monolog` and individual handlers for logging. Once you instantiate a `Logger` object, you have access to `Monolog`'s public API.
+Silverstripe v4+ uses `Monolog` and individual handlers for logging. Once you instantiate a `Logger` object, you have access to `Monolog`'s public API.
 
     $config = ['env' => 'live'];
     $logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
@@ -97,21 +97,20 @@ You can test how these messages appear in Sentry itself, by running the test tas
 
 ## Tags and Extras
 
-Sentry allows for custom key-value pairs to be recorded against each message that it is sent.
-These are known as "tags" and "extras" which allows for fine-grained grouping and filtering of messages via the Sentry UI.
+The Sentry API allows for custom key-value pairs to be recorded against each message that it is sent.
+These are known as "tags" and "extras" which allows for fine-grained grouping and filtering of messages via the Sentry or Glitchtip UI.
 
-Note: It makes no sense to send hugely varying data in a tag. If it's unlikely that a tag you
-wish to send is ever going to be repeated, don't send it as a tag. Look at using the "Extras" feature (also described below)
+Note: It makes no sense to send hugely varying data in a tag. If it's unlikely that a tag you wish to send is ever going to be repeated, don't send it as a tag. Look at using the "Extras" feature (also described below)
 instead.
 
     $config = [
-        // Appears in Sentry's "Details" tab on RHS and in the lozenges, located at the top
+        // Appears in server's "Details" tab on RHS and in the lozenges, located at the top
         'env' => 'live',
-        // Appears in Sentry's "Tags" tab as its own block and in the lozenges on the "Details" tab, located at the top
+        // Appears in the "Tags" tab as its own block and in the lozenges on the "Details" tab, located at the top
         'tags' => [
             'Unique-ID' => 44
         ],
-        // Appears in Sentry's "Details" tab under "Additional Data"
+        // Appears in the "Details" tab under "Additional Data"
         extra => [
             'Moon-Phase' => 'Full',
             'Tummy-Status' => 'Empty',
@@ -156,7 +155,7 @@ The module comes with some pre-defined **tags** and **extras** that are always s
 
 ## Stacktraces
 
-By default, the module will render Sentry's own stacktraces into Sentry's UI. However, you can configure the module to skip recording Silverstripe's own debugging internals as well as those of the module:
+By default, the module will render Sentry's own stacktraces into the server's UI. However, you can configure the module to skip recording Silverstripe's own debugging internals as well as those of the module:
 
 ```
 PhpTek\Sentry\Handler\SentryHandler:
@@ -167,7 +166,7 @@ Note that this feature should be considered experimental/incomplete. It is unabl
 
 ## Releases
 
-You can send Sentry your app's release-tag which causes it to attempt to relate bugs with a specific release, making it even easier to track the point at which an issue surfaced. 
+You can send your Sentry or Glitchtip server your app's release-tag which causes it to attempt to relate bugs to a specific release. This makes it even easier to track the point at which an issue surfaced.
 
 Note: The module's env variable name (below) is clearly not going to fit with your team's standards, regardless of what it's named. In this case it's expected that projects simply comprise two ENV vars which are assigned the same value in the same way within your CI setup.
 
