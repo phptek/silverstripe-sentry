@@ -22,7 +22,7 @@
         "silverstripe/sentry": "*"
     },
     "require": {
-        "php": "^7|^8",
+        "php": "^7||^8",
         "sentry/sdk": "^3",
         "composer/package-versions-deprecated": "^1.11",
         "silverstripe/framework": "^5"
