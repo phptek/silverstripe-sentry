@@ -72,7 +72,10 @@ class SentryHandler extends AbstractProcessingHandler
         $level = Level::fromName($level ?? Level::Debug->getName());
 
         SentrySdk::setCurrentHub(new Hub($client));
-        
+
+        $trace_sample_rate = SentryAdaptor::get_opts()['traces_sample_rate'] ?? null;
+        $config['traces_sample_rate'] = $trace_sample_rate ?: 0.0;
+
         $config['level'] = $level;
 
         $this->logger = SentryLogger::factory($client, $config);

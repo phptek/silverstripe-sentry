@@ -19,6 +19,10 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Environment as Env;
 use PhpTek\Sentry\Adaptor\SentrySeverity;
 use PhpTek\Sentry\Helper\SentryHelper;
+use Sentry\Tracing\DynamicSamplingContext;
+use Sentry\Tracing\TransactionContext;
+use Sentry\Tracing\TransactionMetadata;
+use Sentry\Tracing\TransactionSource;
 
 /**
  * The SentryAdaptor provides a functionality bridge between the getsentry/sentry
@@ -83,6 +87,7 @@ class SentryAdaptor
                     $scope->setUser($data);
                     $this->context['user'] = $data;
                 });
+
                 break;
             case 'extra':
                 $hub->configureScope(function (Scope $scope) use ($data): void {
@@ -97,6 +102,10 @@ class SentryAdaptor
                 $hub->configureScope(function (Scope $scope) use ($data): void {
                     $scope->setLevel(new Severity(SentrySeverity::process_severity($level = $data)));
                 });
+                break;
+            case 'traces_sample_rate':
+                // set's the rate in which traces are sampled 1 is 100%, 0.1 is 10% etc
+                $options->setTracesSampleRate($data);
                 break;
             default:
                 break;
@@ -155,6 +164,10 @@ class SentryAdaptor
             $opts['release'] = $release;
         }
 
+        if ($traces_sample_rate = Env::getEnv('SENTRY_TRACES_SAMPLE_RATE')) {
+            $opts['traces_sample_rate'] = $traces_sample_rate;
+        }
+
         // Env vars take precedence over YML config in array_merge()
         $optsConfig = Config::inst()->get(static::class, 'opts') ?? [];
 
@@ -176,4 +189,19 @@ class SentryAdaptor
         return $opts;
     }
 
+    public function startTransaction()
+    {
+        $hub = SentrySdk::getCurrentHub();
+        $options = $hub->getClient()->getOptions();
+        $rate = $options->getTracesSampleRate();
+
+        // create a new transaction and finish it to send the traces to sentry
+        $samplingContext = DynamicSamplingContext::fromOptions($options, $this->getContext());
+        $source = TransactionSource::url();
+        $metadata = new TransactionMetadata($rate, $samplingContext, $source);
+
+        $transaction_context = new TransactionContext('Bong_3', null, $metadata);
+        $Transaction = $hub->startTransaction($transaction_context);
+        $Transaction->finish();
+    }
 }
