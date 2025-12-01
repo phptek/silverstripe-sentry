@@ -11,13 +11,12 @@
 namespace PhpTek\Sentry\Tasks;
 
 use Monolog\Level;
-use Monolog\Logger;
 use PhpTek\Sentry\Handler\SentryHandler;
 use Psr\Log\LoggerInterface;
-use Silverstripe\Control\Director;
-use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Input\InputInterface;
 
 /**
  * Tests a connection to Sentry, without having to hack directly inside
@@ -30,46 +29,31 @@ class SentryTestConnectionTask extends BuildTask
     /**
      * @var string
      */
-    protected $title = 'Test Sentry Configuration';
+    protected string $title = 'Test Sentry Configuration';
 
     /**
      * @var string
      */
-    protected $description = 'Captures message for all levels available';
+    protected static string $description = 'Captures message for all levels available';
 
     /**
-     * Implement this method in the task subclass to
-     * execute via the TaskRunner
-     *
-     * @param HTTPRequest $request
-     * @return void
+     * Log test message for all log levels into Sentry
      */
-    public function run($request = null): void
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
         /** @var LoggerInterface $logger */
-        $logger = Injector::inst()->createWithArgs(Logger::class, ['error-log'])
+        $logger = Injector::inst()->createWithArgs(LoggerInterface::class, ['error-log'])
             ->pushHandler(SentryHandler::create());
 
         foreach (Level::NAMES as $name) {
             $func = strtolower($name);
             $logger->$func(sprintf("Testing Severity Level: %s", $name));
 
-            self::output(sprintf("Tested Security Level: %s", $name));
+            $output->writeln(sprintf("Tested Security Level: %s", $name));
         }
 
-        self::output("\nDone!");
-    }
+        $output->writeln("Done!");
 
-    /**
-     * Simple output logging.
-     *
-     * @param string $message
-     * @return void
-     */
-    private static function output(string $message): void
-    {
-        $newLine = Director::is_cli() ? PHP_EOL : '<br/>';
-        printf($message . $newLine);
+        return 0; // success
     }
-
 }
