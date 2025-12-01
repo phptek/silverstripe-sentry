@@ -21,7 +21,7 @@ class SentrySeverity
     /**
      * Maps PHP's internal error-types into those suited to {@link Severity}.
      *
-     * @param  mixed int|string $severity The incoming level from userland code or
+     * @param  mixed $severity int|string $severity The incoming level from userland code or
      *                                    PHP itself.
      * @return string
      */
