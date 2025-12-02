@@ -258,8 +258,7 @@ class SentryLogger
      */
     public static function get_ip(): ?string
     {
-        if (Controller::has_curr()) {
-            $controller = Controller::curr();
+        if ($controller = Controller::curr()) {
 
             if ($request = $controller->getRequest()) {
                 return $request->getIP();
