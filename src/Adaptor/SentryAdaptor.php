@@ -32,7 +32,7 @@ class SentryAdaptor
      *
      * @var array
      */
-    protected $context = [
+    protected array $context = [
         'env' => '',
         'tags' => [],
         'extra' => [],

@@ -9,6 +9,8 @@
 
 namespace PhpTek\Sentry\Handler;
 
+use Sentry\Client;
+use Sentry\ClientInterface;
 use Throwable;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
@@ -38,41 +40,38 @@ class SentryHandler extends AbstractProcessingHandler
         Configurable;
 
     /**
-     * @var mixed int|null
+     * @var int|null
      */
-    private static $log_level = null;
+    private static ?int $log_level = null;
 
     /**
-     * @var mixed SentryLogger|null
+     * @var SentryLogger|null
      */
     private $logger = null;
 
     /**
-     * @var mixed ClientBuilder|null
+     * @var ClientInterface|Client|null
      */
     private $client = null;
 
     /**
      * Keeps track of the no. times this object is instantiated.
-     *
-     * @var int
      */
-    private static $counter = 0;
+    private static int $counter = 0;
 
     /**
-     * @param  int     $level
-     * @param  boolean $bubble
-     * @param  array   $config
-     * @return void
+     * @param int|null $level
+     * @param bool $bubble
+     * @param array $config
      */
-    public function __construct($level = null, bool $bubble = true, array $config = [])
+    public function __construct(?int $level = null, bool $bubble = true, array $config = [])
     {
         $client = ClientBuilder::create(SentryAdaptor::get_opts() ?: [])->getClient();
         $level = $level ?: $this->config()->get('log_level');
         $level = Level::fromName($level ?? Level::Debug->getName());
 
         SentrySdk::setCurrentHub(new Hub($client));
-        
+
         $config['level'] = $level;
 
         $this->logger = SentryLogger::factory($client, $config);
@@ -130,7 +129,7 @@ class SentryHandler extends AbstractProcessingHandler
                 'stacktrace' => new Stacktrace(SentryLogger::backtrace($record)),
             ]);
         }
-        
+
         // Ref #65 This works around the fact that somewhere in the bowels of Sentry or Monolog,
         // we're managing to trigger the handler twice and send two messages, one of each kind.
         if (static::$counter > 0) {

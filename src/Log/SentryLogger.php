@@ -35,9 +35,9 @@ class SentryLogger
     public const DEFAULT_IP = '0.0.0.0';
 
     /**
-     * @var SentryAdaptor
+     * @var SentryAdaptor|null
      */
-    public $adaptor = null;
+    public ?SentryAdaptor $adaptor = null;
 
     /**
      * Stipulates what gets shown in the Sentry UI, should some metric not be
@@ -45,7 +45,7 @@ class SentryLogger
      *
      * @var string
      */
-    const SLW_NOOP = 'Unavailable';
+    public const SLW_NOOP = 'Unavailable';
 
     /**
      * Default text to show if in self-generated stacktraces, we're unable to discern data.
@@ -259,7 +259,6 @@ class SentryLogger
     public static function get_ip(): ?string
     {
         if ($controller = Controller::curr()) {
-
             if ($request = $controller->getRequest()) {
                 return $request->getIP();
             }
@@ -287,8 +286,8 @@ class SentryLogger
 
         return [
             'ip_address' => self::get_ip() ?? self::DEFAULT_IP,
-            'id'       => $member ? $member->getField('ID') : self::SLW_NOOP,
-            'email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
+            'id'         => $member ? $member->getField('ID') : self::SLW_NOOP,
+            'email'      => $member ? $member->getField('Email') : self::SLW_NOOP,
         ];
     }
 
