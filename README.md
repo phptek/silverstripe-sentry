@@ -20,6 +20,7 @@ This module binds sentry.io, app.glitchtip.com and on-prem hosted Sentry/Glitcht
 
 ## Notes:
 
+* Version 6.x is aimed at Silverstripe 6.
 * Version 5.x is aimed at Silverstripe 5.
 * Versions 2.x, 3.x and 4.x should work with the same Silverstripe v4 setups. v3+ simply use newer versions of the Sentry PHP SDK and have additional bugfixes and features.
 * Version 3.x `SentryClientAdaptor` has been renamed to `SentryAdaptor` and `SentryLogWriter` was renamed to `SentryLogger`, so your existing configuration(s) may need to be updated accordingly.
