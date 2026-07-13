@@ -46,6 +46,11 @@ class SentryLogger
     const SLW_NOOP = 'Unavailable';
 
     /**
+     * @var string
+     */
+    public const DEFAULT_IP = '0.0.0.0';
+
+    /**
      * Default text to show if in self-generated stacktraces, we're unable to discern data.
      *
      * @var string
@@ -284,7 +289,7 @@ class SentryLogger
         }
 
         return [
-            'ip_address' => self::get_ip() ?: self::SLW_NOOP,
+            'ip_address' => self::get_ip() ?: self::DEFAULT_IP,
             'id'       => $member ? $member->getField('ID') : self::SLW_NOOP,
             'email'    => $member ? $member->getField('Email') : self::SLW_NOOP,
         ];
