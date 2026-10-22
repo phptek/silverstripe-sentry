@@ -3,7 +3,7 @@
 /**
  * Class: SentryHandler.
  *
- * @author  Russell Michell 2017-2021 <russ@theruss.com>
+ * @author  Russell Michell 2017-2026 <russ@theruss.com>
  * @package phptek/sentry
  */
 
@@ -60,11 +60,11 @@ class SentryHandler extends AbstractProcessingHandler
     private static int $counter = 0;
 
     /**
-     * @param int|null $level
+     * @param string|null $level
      * @param bool $bubble
      * @param array $config
      */
-    public function __construct(?int $level = null, bool $bubble = true, array $config = [])
+    public function __construct(?string $level = null, bool $bubble = true, array $config = [])
     {
         $client = ClientBuilder::create(SentryAdaptor::get_opts() ?: [])->getClient();
         $level = $level ?: $this->config()->get('log_level');
